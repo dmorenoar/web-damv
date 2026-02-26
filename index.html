@@ -1,69 +1,18 @@
 <!DOCTYPE html>
 <html lang="ca">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" href="assets/icon.png">
-    <title>C# Retro Arcade Platform</title>
+    <title>DAMV_OS: Matrix Mario 3D Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        .animate-blink {
-            animation: blink 0.8s step-end infinite;
-        }
-
-        .course-card img {
-            filter: brightness(0.6) contrast(1.4) sepia(1) hue-rotate(80deg) saturate(3) !important;
-            transition: all 0.4s ease-in-out !important;
-        }
-
-        .card-container:hover .course-card img {
-            filter: brightness(1) contrast(1.1) sepia(0) hue-rotate(0deg) saturate(1.2) !important;
-        }
-
-        @keyframes blink-green {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .loading-text {
-            animation: blink-green 0.8s infinite;
-            font-family: 'Press Start 2P', cursive !important;
-            color: #00ff41 !important;
-            text-shadow: 0 0 10px #00ff41, 0 0 20px rgba(0, 255, 65, 0.5);
-            font-size: 7px !important;
-            letter-spacing: 1px;
-            text-align: center;
-            display: block;
-        }
-
-        .matrix-spinner {
-            border: 2px solid rgba(0, 255, 65, 0.2);
-            border-top: 2px solid #00ff41 !important;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         :root {
             --pixel-bg: #0a0118;
             --pixel-header: rgba(15, 0, 30, 0.95);
-            --pixel-accent: #f2ea02;
-            --pixel-success: #00ff41;
-            --pixel-blue: #00d2ff;
+            --pixel-accent: #f2ea02; 
+            --pixel-success: #00ff41; 
+            --pixel-blue: #00d2ff;   
             --pixel-purple: #bd00ff;
             --pixel-border: #ffffff;
             --pixel-mario-red: #ff0000;
@@ -77,12 +26,13 @@
             font-size: 10px;
             overflow-x: hidden;
             min-height: 100vh;
+            cursor: auto;
         }
 
+        /* --- MATRIX FOLLOWER --- */
         #pointerFollower {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             pointer-events: none;
             z-index: 9999;
             transform: translate(-100%, -100%);
@@ -106,8 +56,7 @@
         }
 
         .follower-dot {
-            width: 6px;
-            height: 6px;
+            width: 6px; height: 6px;
             background: var(--pixel-success);
             border-radius: 50%;
             box-shadow: 0 0 8px var(--pixel-success);
@@ -119,43 +68,31 @@
             50% { transform: scale(1.5); opacity: 0.5; }
         }
 
+        /* --- BARRAS DE PROGRESO 8-BIT --- */
         .pixel-bar-container {
-            width: 100%;
-            height: 16px;
-            background: #222;
-            border: 2px solid #555;
-            position: relative;
-            margin-top: 4px;
+            width: 100%; height: 16px;
+            background: #222; border: 2px solid #555;
+            position: relative; margin-top: 4px;
             box-shadow: inset 2px 2px 0 #000;
         }
-
         .pixel-bar-fill {
             height: 100%;
             background: repeating-linear-gradient(90deg, var(--bar-color), var(--bar-color) 12px, #000 12px, #000 14px);
         }
 
+        /* --- FONDO DIN¨¤MIC --- */
         .background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: -2;
             background: linear-gradient(to bottom, #000000 0%, #0a0118 50%, #240046 100%);
-            perspective: 800px;
-            overflow: hidden;
+            perspective: 800px; overflow: hidden;
         }
 
         .retro-grid {
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            bottom: -50%;
-            left: -50%;
+            position: absolute; width: 200%; height: 200%; bottom: -50%; left: -50%;
             background-image: linear-gradient(rgba(189, 0, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(189, 0, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: rotateX(60deg);
+                              linear-gradient(90deg, rgba(189, 0, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; transform: rotateX(60deg);
             animation: gridScroll 10s linear infinite;
         }
 
@@ -164,13 +101,17 @@
             100% { transform: rotateX(60deg) translateY(50px); }
         }
 
-        .card-container {
-            perspective: 1000px;
-            height: 100%;
-            position: relative;
-            padding: 20px;
-        }
+        #stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        @keyframes animStar { from { transform: translateY(0px); } to { transform: translateY(-2000px); } }
 
+        /* --- 3D CARD STRUCTURE --- */
+        .card-container { 
+            perspective: 1000px; 
+            height: 100%; 
+            position: relative; 
+            padding: 15px;
+        }
+        
         .card-wrapper {
             position: relative;
             border-radius: 20px;
@@ -191,30 +132,37 @@
             padding: 16px;
             display: flex;
             flex-direction: column;
-            filter: saturate(0);
-            transition: filter 0.4s ease, background 0.4s ease;
-            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+            transition: background 0.4s ease;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
             transform-style: preserve-3d;
         }
 
-        .card-container:hover .course-card {
-            filter: saturate(1.2);
-            background: #252727;
+        /* --- EFECTO VERDE MATRIX EN IM¨¢GENES --- */
+        .course-card img {
+            filter: brightness(0.6) contrast(1.4) sepia(1) hue-rotate(80deg) saturate(3) !important;
+            transition: all 0.4s ease-in-out !important;
+        }
+
+        .card-container:hover .course-card { background: #252727; }
+        
+        .card-container:hover .course-card img {
+            filter: brightness(1) contrast(1.1) sepia(0) hue-rotate(0deg) saturate(1.2) !important;
         }
 
         .float-layer-high { transform: translateZ(80px); }
         .float-layer-mid { transform: translateZ(40px); }
         .float-layer-low { transform: translateZ(20px); }
 
-        .mouse-overlay {
-            position: absolute;
-            inset: 0;
-            z-index: 50;
+        .mouse-overlay { 
+            position: absolute; 
+            inset: 0; 
+            z-index: 50; 
             cursor: none;
         }
 
+        /* --- GLITCH --- */
         .glitch-active:hover .glitch-target {
-            animation: glitch-text 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            animation: glitch-text 0.3s cubic-bezier(.25,.46,.45,.94) both infinite;
             color: #fff;
             text-shadow: 2px 0 #ff00c1, -2px 0 #00fff9;
         }
@@ -228,108 +176,68 @@
             100% { transform: translate(0); }
         }
 
-        .pacman-icon {
-            width: 22px;
-            height: 22px;
-            background: var(--pixel-accent);
-            border-radius: 50%;
-            animation: chomp 0.3s ease-in-out infinite;
-            flex-shrink: 0;
-            box-shadow: 0 0 5px rgba(242, 234, 2, 0.5);
+        /* --- PAC-MAN YELLOW --- */
+        @keyframes chomp {
+            0% { clip-path: polygon(100% 50%, 100% 0, 0 0, 0 100%, 100% 100%); }
+            50% { clip-path: polygon(50% 50%, 100% 20%, 100% 0, 0 0, 0 100%, 100% 100%, 100% 80%); }
+            100% { clip-path: polygon(100% 50%, 100% 0, 0 0, 0 100%, 100% 100%); }
         }
 
-        @keyframes chomp {
-            0%, 100% { clip-path: polygon(100% 50%, 100% 0, 0 0, 0 100%, 100% 100%); }
-            50% { clip-path: polygon(50% 50%, 100% 20%, 100% 0, 0 0, 0 100%, 100% 100%, 100% 80%); }
+        .pacman-icon {
+            width: 22px; height: 22px; 
+            background: var(--pixel-accent); 
+            border-radius: 50%;
+            animation: chomp 0.3s ease-in-out infinite; 
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(242, 234, 2, 0.4);
         }
 
         .module-header-info {
-            display: none;
-            background: rgba(10, 1, 24, 0.95);
-            border: 4px solid var(--pixel-border);
-            padding: 30px;
-            margin-bottom: 40px;
-            box-shadow: 10px 10px 0px #000;
+            display: none; background: rgba(10, 1, 24, 0.95); border: 4px solid var(--pixel-border);
+            padding: 30px; margin-bottom: 40px; box-shadow: 10px 10px 0px #000;
         }
 
         .ra-item {
-            margin-bottom: 10px;
-            font-size: 8px;
-            color: #bbb;
-            padding: 10px;
-            border-left: 4px solid var(--pixel-success);
-            background: rgba(0, 255, 65, 0.05);
-            transition: transform 0.3s;
-            line-height: 1.6;
+            margin-bottom: 10px; font-size: 8px; color: #bbb; padding: 10px;
+            border-left: 4px solid var(--pixel-success); background: rgba(0, 255, 65, 0.05);
+            transition: transform 0.3s; line-height: 1.6;
         }
-
-        .ra-item:hover {
-            transform: translateX(10px);
-            background: rgba(0, 255, 65, 0.1);
-        }
-
+        .ra-item:hover { transform: translateX(10px); background: rgba(0, 255, 65, 0.1); }
         .ra-item b { color: var(--pixel-success); margin-right: 5px; }
 
         .download-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 150;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid white;
-            color: white;
-            padding: 5px;
-            border-radius: 4px;
-            font-size: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; top: 10px; right: 10px; z-index: 150;
+            background: rgba(0,0,0,0.7); border: 2px solid white; color: white;
+            padding: 5px; border-radius: 4px; font-size: 10px; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center;
         }
-
-        .download-btn:hover {
-            background: var(--pixel-accent);
-            color: black;
-            border-color: black;
-            transform: scale(1.1);
-        }
+        .download-btn:hover { background: var(--pixel-accent); color: black; border-color: black; }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-
 <body>
 
     <div id="pointerFollower">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-            class="text-green-400 drop-shadow-[0_0_8px_#00ff41]">
-            <path d="M5 19L19 5M19 5H10M19 5V14" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                stroke-linejoin="round" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-green-400 drop-shadow-[0_0_8px_#00ff41]">
+            <path d="M5 19L19 5M19 5H10M19 5V14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <div class="follower-badge">
             <div class="follower-dot"></div>
-            <span id="matrixText" class="text-[8px] uppercase tracking-widest font-bold">Init mission</span>
+            <span id="matrixText" class="text-[8px] uppercase tracking-widest font-bold">Enter the matrix</span>
         </div>
     </div>
 
     <div class="background-container">
         <div class="retro-grid"></div>
+        <div id="stars"></div>
     </div>
 
     <nav class="sticky top-0 z-[500] p-4 bg-black/90 border-b border-gray-800 backdrop-blur-md">
         <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-6">
-            <div class="text-xl text-yellow-400 font-bold tracking-tighter shrink-0 cursor-pointer"
-                onclick="location.reload()">DAMV_OS_v2.3</div>
-            <div class="flex-grow flex items-center justify-center max-w-2xl px-4">
-                <div class="w-full relative">
-                    <input type="text" id="searchInput"
-                        class="w-full bg-black border-2 border-purple-900 p-2 text-[8px] text-green-400 outline-none rounded-md placeholder-gray-800"
-                        placeholder="SEARCH_SYSTEM_FILES..." oninput="handleSearch()">
-                    <div class="absolute right-3 top-1/2 -translate-y-1/2 text-purple-900 text-[10px]">ðŸ”Ž</div>
-                </div>
-            </div>
-            <div class="flex items-center gap-4 cursor-pointer shrink-0" onclick="toggleProfileModal()">
+            <div class="text-xl text-yellow-400 font-bold tracking-tighter shrink-0 cursor-pointer" onclick="location.reload()">DAMV_OS_v2.4</div>
+            
+             <div class="flex items-center gap-4 cursor-pointer shrink-0" onclick="toggleProfileModal()">
                 <div id="nav-mario-icon"
                     class="animate-pulse w-14 h-14 border-4 border-gray-700 bg-black flex items-center justify-center hover:bg-purple-500 transition-all p-1 shadow-[4px_4px_0_#000]">
                     <svg viewBox="0 0 16 16" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
@@ -356,14 +264,12 @@
         </div>
     </nav>
 
+    <!-- BARRA DE FILTROS ACTUALIZADA -->
     <div class="bg-black/80 p-3 border-b border-gray-800 backdrop-blur-sm relative z-20 overflow-x-auto no-scrollbar">
         <div class="max-w-[1400px] mx-auto flex gap-4 min-w-max">
-            <button onclick="setModuleFilter('ALL')" id="mod-all"
-                class="text-[8px] px-4 py-2 bg-yellow-400 text-black font-bold border-b-4 border-r-4 border-yellow-700">ALL_MISSIONS</button>
-            <button onclick="setModuleFilter('M0485')" id="mod-M0485"
-                class="text-[8px] px-4 py-2 bg-[#1a0133] text-white border-2 border-purple-900">M0485_PROG</button>
-            <button onclick="setModuleFilter('M0487')" id="mod-M0487"
-                class="text-[8px] px-4 py-2 bg-[#1a0133] text-white border-2 border-purple-900">M0487_ENTORNS</button>
+            <button onclick="setModuleFilter('ALL')" id="mod-all" class="text-[8px] px-4 py-2 bg-yellow-400 text-black font-bold border-b-4 border-r-4 border-yellow-700 transition-all">ALL_MISSIONS</button>
+            <button onclick="setModuleFilter('M0485')" id="mod-M0485" class="text-[8px] px-4 py-2 bg-[#1a0133] text-white border-2 border-purple-900 transition-all">M0485_PROG</button>
+            <button onclick="setModuleFilter('M0487')" id="mod-M0487" class="text-[8px] px-4 py-2 bg-[#1a0133] text-white border-2 border-purple-900 transition-all">M0487_ENTORNS</button>
         </div>
     </div>
 
@@ -385,6 +291,7 @@
         <div id="syllabusContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12"></div>
     </main>
 
+    <!-- CHARACTER SHEET -->
     <div id="profileModal" onclick="playCoin()" class="fixed inset-0 bg-black/95 z-[3000] hidden items-center justify-center p-6"
         onclick="if(event.target == this) ">
         <div class="bg-[#111] border-4 border-white p-8 max-w-2xl w-full shadow-[15px_15px_0px_rgba(0,0,0,0.8)] border-double">
@@ -504,17 +411,17 @@
         </div>
     </div>
 
+    <!-- MISSION MODAL -->
     <div id="missionModal" class="fixed inset-0 bg-black/95 z-[3000] hidden items-center justify-center p-6">
         <div class="bg-[#1a0133] border-8 border-double border-yellow-400 p-8 max-w-md w-full text-center shadow-[15px_15px_0px_#000]">
             <div class="text-yellow-400 text-2xl mb-4 font-bold tracking-tighter uppercase">Mission Start!</div>
-            <p id="missionName" class="text-white text-[10px] uppercase mb-4 leading-loose bg-black p-4 border border-purple-500"></p>
+            <p id="missionName" class="text-white text-[11px] uppercase mb-4 leading-loose bg-black p-4 border border-purple-500"></p>
             <p id="missionDescLong" class="text-gray-400 text-[8px] mb-8 leading-relaxed uppercase tracking-tight"></p>
-            <button onclick="closeMission()"
-                class="w-full py-4 bg-white text-black font-bold text-[8px] uppercase border-b-8 border-r-8 border-gray-400 hover:bg-green-400 transition-all">START_PROTOCOLS</button>
+            <button onclick="closeMission()" class="w-full py-4 bg-white text-black font-bold text-[10px] uppercase border-b-8 border-r-8 border-gray-400 hover:bg-green-400 transition-all">START_PROTOCOLS</button>
         </div>
     </div>
 
-    <audio id="bg-music" loop preload="auto">
+ <audio id="bg-music" loop preload="auto">
         <source src="audio/song.mp3" type="audio/mp4">
     </audio>
 
@@ -526,9 +433,8 @@
         class="fixed bottom-4 right-4 w-12 h-12 border-4 border-gray-700 bg-black text-white flex items-center justify-center hover:bg-purple-500 shadow-[4px_4px_0_#000] z-50">
         <span id="music-icon">ðŸ”‡</span>
     </button>
-
 <script>
-    // 2. DEFINIM L'Ã€UDIO FORA PERQUÃˆ ESTIGUI SEMPRE LLEST
+// 2. DEFINIM L'Ã€UDIO FORA PERQUÃˆ ESTIGUI SEMPRE LLEST
     const coinSfx = document.getElementById('coin-sound');
     
     // Forcem la precÃ rrega
@@ -585,8 +491,18 @@
                 toggleBtn.classList.remove('animate-pulse');
             }
         });
+		
+		
 
-        // --- LÃ“GICA DE LA WEB (CONTENIDO) ---
+</script>
+
+    <script>
+	
+	
+	
+	
+	
+        const apiKey = "";
         let currentSearch = '';
         let currentModule = 'ALL';
 
@@ -636,7 +552,9 @@
         function populateRALists() {
             ['M0485', 'M0487'].forEach(mod => {
                 const list = document.getElementById(`ra-list-${mod}`);
-                if (list) list.innerHTML = raData[mod].map(ra => `<div class="ra-item"><b>${ra.split('. ')[0]}.</b> ${ra.split('. ')[1]}</div>`).join('');
+                if (list) {
+                    list.innerHTML = raData[mod].map(ra => `<div class="ra-item"><b>${ra.split('. ')[0]}.</b> ${ra.split('. ')[1]}</div>`).join('');
+                }
             });
         }
 
@@ -649,8 +567,8 @@
                 overlay.onmouseenter = () => { follower.style.opacity = "1"; };
                 overlay.onmousemove = (e) => {
                     const rect = container.getBoundingClientRect();
-                    const x = (rect.width / 2 - (e.clientX - rect.left)) / 15;
-                    const y = ((e.clientY - rect.top) - rect.height / 2) / 15;
+                    const x = (rect.width / 2 - (e.clientX - rect.left)) / 12;
+                    const y = ((e.clientY - rect.top) - rect.height / 2) / 12;
                     if (requestId) cancelAnimationFrame(requestId);
                     requestId = requestAnimationFrame(() => {
                         wrapper.style.transform = `rotateX(${y}deg) rotateY(${x}deg)`;
@@ -664,7 +582,31 @@
             });
         }
 
-        async function loadImages() {
+        async function fetchImage(prompt) {
+            const variations = ["neon pixel art", "cyberpunk asset", "retro gaming", "digital code"];
+            const seed = variations[Math.floor(Math.random() * variations.length)];
+            const fullPrompt = `8-bit pixel art of ${prompt}, ${seed}, dark background.`;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instances: [{ prompt: fullPrompt }], parameters: { sampleCount: 1 } })
+                });
+                const data = await res.json();
+                return data.predictions?.[0]?.bytesBase64Encoded ? `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}` : null;
+            } catch (e) { return null; }
+        }
+
+        function downloadImg(url, name) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${name.replace(/\s+/g, '_')}_IA.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+       async function loadImages() {
             for (let item of syllabus) {
                 const slot = document.getElementById(`img-slot-${item.id}`);
                 if (slot && item.img && !slot.querySelector('img')) {
@@ -681,6 +623,48 @@
                 }
             }
         }
+
+        function setModuleFilter(mod) {
+            currentModule = mod;
+            const buttons = document.querySelectorAll('button[id^="mod-"]');
+            
+            // Reset de estilos
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-yellow-400', 'text-black', 'border-yellow-700', 'bg-[#00d2ff]', 'bg-[#bd00ff]', 'border-blue-700', 'border-purple-700');
+                btn.classList.add('bg-[#1a0133]', 'text-white', 'border-purple-900');
+            });
+
+            const activeBtn = document.getElementById(mod === 'ALL' ? 'mod-all' : `mod-${mod}`);
+            
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-[#1a0133]', 'text-white', 'border-purple-900');
+                
+                // ASIGNACI¨®N DE COLOR SEG¨²N CATEGOR¨ªA
+                if (mod === 'ALL') activeBtn.classList.add('bg-yellow-400', 'text-black', 'border-yellow-700', 'border-b-4', 'border-r-4');
+                if (mod === 'M0485') activeBtn.classList.add('bg-[#00d2ff]', 'text-black', 'border-blue-700', 'border-b-4', 'border-r-4');
+                if (mod === 'M0487') activeBtn.classList.add('bg-[#bd00ff]', 'text-black', 'border-purple-700', 'border-b-4', 'border-r-4');
+            }
+
+            document.getElementById('info-M0485').style.display = (mod === 'M0485') ? 'block' : 'none';
+            document.getElementById('info-M0487').style.display = (mod === 'M0487') ? 'block' : 'none';
+            
+            const titleText = mod === 'ALL' ? "MISSIONS_DATABASE" : (mod === 'M0485' ? "PROGRAMMING_CORE" : "ENVIRONMENT_LOGS");
+            animateEncryptedText("missionsDatabaseTitle", titleText);
+            renderSyllabus();
+        }
+
+        function handleSearch() { currentSearch = document.getElementById('searchInput').value.toLowerCase(); renderSyllabus(); }
+        function startMission(name, desc, url) {
+            if (url && url !== "#") { window.open(url, '_blank'); } 
+            else {
+                const m = document.getElementById('missionModal');
+                document.getElementById('missionName').innerText = name;
+                document.getElementById('missionDescLong').innerText = desc;
+                m.style.display = 'flex';
+            }
+        }
+        function closeMission() { document.getElementById('missionModal').style.display = 'none'; }
+        function toggleProfileModal() { const m = document.getElementById('profileModal'); if (m) m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
 
         function renderSyllabus() {
             const container = document.getElementById('syllabusContainer');
@@ -729,37 +713,19 @@
             loadImages();
         }
 
-        function setModuleFilter(mod) {
-            currentModule = mod;
-            document.querySelectorAll('button[id^="mod-"]').forEach(btn => {
-                btn.classList.remove('bg-yellow-400', 'text-black', 'border-b-4', 'border-r-4', 'border-yellow-700');
-                btn.classList.add('bg-[#1a0133]', 'text-white', 'border-2', 'border-purple-900');
-            });
-            const activeBtn = document.getElementById(mod === 'ALL' ? 'mod-all' : `mod-${mod}`);
-            if (activeBtn) activeBtn.classList.add('bg-yellow-400', 'text-black', 'border-b-4', 'border-r-4', 'border-yellow-700');
-            renderSyllabus();
-        }
-
-        function handleSearch() { currentSearch = document.getElementById('searchInput').value.toLowerCase(); renderSyllabus(); }
-        function startMission(name, desc) {
-            const m = document.getElementById('missionModal');
-            document.getElementById('missionName').innerText = name;
-            document.getElementById('missionDescLong').innerText = desc;
-            m.style.display = 'flex';
-        }
-        function closeMission() { document.getElementById('missionModal').style.display = 'none'; }
-        function toggleProfileModal() { 
-            const m = document.getElementById('profileModal'); 
-            if (m) m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; 
-        }
-
-        window.onload = () => {
-            populateRALists();
-            animateEncryptedText("missionsDatabaseTitle", "MISSIONS_DATABASE");
-            renderSyllabus();
+        window.onload = () => { 
+            populateRALists(); 
+            animateEncryptedText("missionsDatabaseTitle", "MISSIONS_DATABASE"); 
+            renderSyllabus(); 
+            loadImages(); 
+            const st = document.createElement('style'); 
+            let bx = [];
+            for(let i=0; i<450; i++) bx.push(`${Math.random()*2000}px ${Math.random()*2000}px #FFF`);
+            st.innerHTML = `#stars { box-shadow: ${bx.join(', ')}; width: 1px; height: 1px; animation: animStar 140s linear infinite; }`;
+            document.head.appendChild(st);
         };
-
-        function downloadImg(url, name) {
+		
+		function downloadImg(url, name) {
             const link = document.createElement('a');
             link.href = url;
             link.download = `${name.replace(/\s+/g, '_')}_IMG.png`;
