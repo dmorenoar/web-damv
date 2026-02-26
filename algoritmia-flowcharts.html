@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MISSION_01: ALGORITMIA_FLOWCHARTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pixel-bg: #0a0118;
+            --pixel-accent: #f2ea02;
+            --pixel-success: #00ff41;
+            --pixel-blue: #00d2ff;
+            --pixel-purple: #bd00ff;
+            --pixel-mario-red: #ff0000;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(to bottom, #000000 0%, #0a0118 50%, #240046 100%);
+            color: #ffffff;
+            font-size: 10px;
+            line-height: 1.6;
+            image-rendering: pixelated;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- BORDES PIXELADOS --- */
+        .pixel-border {
+            border: 4px solid #fff;
+            box-shadow: 
+                0 -4px 0 -2px #fff, 0 4px 0 -2px #fff, 
+                -4px 0 0 -2px #fff, 4px 0 0 -2px #fff,
+                8px 8px 0px 0px rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .pixel-card-blue { border-color: var(--pixel-blue); }
+        .pixel-card-green { border-color: var(--pixel-success); }
+        .pixel-card-yellow { border-color: var(--pixel-accent); }
+        .pixel-card-red { border-color: var(--pixel-mario-red); }
+
+        /* --- BLOQUE INTERROGACIÓN --- */
+        .question-block {
+            width: 40px;
+            height: 40px;
+            background: #f2ea02;
+            position: relative;
+            border: 3px solid #000;
+            box-shadow: inset -4px -4px 0px #b58d00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        .question-block::before {
+            content: "?";
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-3px); }
+        }
+
+        /* --- GLITCH TEXT --- */
+        .glitch {
+            text-shadow: 2px 0 var(--pixel-mario-red), -2px 0 var(--pixel-blue);
+            animation: glitch-anim 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { text-shadow: 2px 0 var(--pixel-mario-red), -2px 0 var(--pixel-blue); }
+            50% { text-shadow: -2px 0 var(--pixel-mario-red), 2px 0 var(--pixel-blue); }
+            100% { text-shadow: 1px 0 var(--pixel-success), -1px 0 var(--pixel-purple); }
+        }
+
+        /* --- TABLA DE TRAZA --- */
+        .trace-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8px;
+            text-transform: uppercase;
+        }
+        .trace-table th, .trace-table td {
+            border: 2px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        .trace-table th {
+            background: #222;
+            color: var(--pixel-accent);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+    <!-- Se ha eliminado el div crt-overlay y los pseudo-elementos del body -->
+
+    <!-- HEADER SYSTEM -->
+    <header class="max-w-5xl mx-auto mb-16 relative">
+        <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b-8 border-double border-white/20 pb-8">
+            <div class="relative">
+                <p class="text-blue-400 text-[7px] mb-3 tracking-widest">>> LOAD_FILE: MODULE_M0485_ALGO.EXE</p>
+                <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tighter glitch">ALGORITMIA_v1.0</h1>
+                <div class="absolute -top-4 -right-12 animate-bounce">
+                     <span class="bg-red-600 text-white text-[6px] px-2 py-1 border-2 border-black">CONTENT_UPGRADED!</span>
+                </div>
+            </div>
+            <div class="text-right space-y-2">
+                <p class="text-[7px] text-gray-500 uppercase">System: DAMV_OS_v2.3</p>
+                <p class="text-[7px] text-yellow-400">Status: Verified_Info</p>
+                <p class="text-green-400 text-[8px] animate-pulse uppercase">● READY_FOR_READING...</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto space-y-16">
+        
+        <!-- SECCIÓ 1: ANÀLISI I CONCEPTES -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div class="lg:col-span-2 pixel-border pixel-card-blue p-6 md:p-8">
+                <h2 class="text-yellow-400 text-[12px] mb-6 uppercase">01. Fase d'Anàlisi (Requisits del Sistema)</h2>
+                <p class="mb-6 text-gray-200 uppercase leading-loose">
+                    Abans de programar, cal entendre el problema. Un algoritme és una seqüència d'instruccions per resoldre una tasca sense ambigüitats.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-black/60 p-4 border-2 border-dashed border-gray-700">
+                        <h3 class="text-blue-400 text-[8px] mb-3">DADES D'ENTRADA:</h3>
+                        <p class="text-[7px] text-gray-400">Informació necessària per començar (paràmetres).</p>
+                    </div>
+                    <div class="bg-black/60 p-4 border-2 border-dashed border-gray-700">
+                        <h3 class="text-red-400 text-[8px] mb-3">RESTRICCIONS:</h3>
+                        <p class="text-[7px] text-gray-400">Condicions que han de complir les dades (ex: edat > 0).</p>
+                    </div>
+                </div>
+                <div class="mt-6 p-4 bg-blue-900/20 border border-blue-500 text-[7px] uppercase leading-relaxed">
+                    <p class="text-white mb-2 underline">DEFINICIÓ DE PROGRAMA:</p>
+                    <p class="text-gray-300">Conjunt d'instruccions que l'ordinador entén per realitzar una tasca. Cada instrucció ha de ser atòmica i clara.</p>
+                </div>
+            </div>
+
+            <!-- TIPUS DE DADES -->
+            <div class="pixel-border pixel-card-yellow p-6 flex flex-col gap-6">
+                <h3 class="text-center text-[8px] text-yellow-400 mb-2">VARIABLE_TYPES</h3>
+                <div class="flex items-center gap-4">
+                    <div class="question-block"></div>
+                    <span class="text-[7px] uppercase">Sencer: Nombres sense decimals</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="question-block"></div>
+                    <span class="text-[7px] uppercase">Real: Nombres amb decimals</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="question-block"></div>
+                    <span class="text-[7px] uppercase">Booleà: Cert o Fals</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="question-block"></div>
+                    <span class="text-[7px] uppercase">Cadena: Text (String)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 2: REGLES DELS DIAGRAMES -->
+        <section class="pixel-border pixel-card-green p-8">
+            <h2 class="text-green-400 text-[12px] mb-8 uppercase text-center underline">02. Regles dels Diagrames de Flux</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4 text-[7px] text-gray-300 uppercase leading-loose">
+                    <p>● S'escriuen de dalt a baix i d'esquerra a dreta.</p>
+                    <p>● Només tenen un punt d'INICI i un de FINAL.</p>
+                    <p>● Totes les línies de flux han de connectar amb un símbol.</p>
+                    <p>● Les línies de flux no es poden creuar mai.</p>
+                </div>
+                <div class="bg-black border-2 border-green-500 p-4 flex items-center justify-center">
+                    <div class="text-center">
+                        <div class="px-4 py-2 border-2 border-white rounded-full text-[6px] mb-2">INICI</div>
+                        <div class="w-1 h-4 bg-white mx-auto mb-2"></div>
+                        <div class="px-6 py-3 border-2 border-yellow-400 rotate-45 flex items-center justify-center text-[6px] mb-2"><span class="-rotate-45">SI/NO?</span></div>
+                        <div class="w-1 h-4 bg-white mx-auto mb-2"></div>
+                        <div class="px-4 py-2 border-2 border-white rounded-full text-[6px]">FINAL</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 3: JOC DE PROVES -->
+        <section class="pixel-border pixel-card-red p-8">
+            <h2 class="text-red-500 text-[12px] mb-6 uppercase">03. Joc de Proves (Tracing Tables)</h2>
+            <p class="text-gray-300 text-[8px] mb-6 uppercase">
+                Per verificar la lògica, usem taules de traça que mostren com canvien les variables pas a pas.
+            </p>
+            <div class="overflow-x-auto">
+                <table class="trace-table">
+                    <thead>
+                        <tr>
+                            <th>Pas</th>
+                            <th>Variable [X]</th>
+                            <th>Condició (X > 5)</th>
+                            <th>Sortida</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>3</td><td>FALS</td><td>-</td></tr>
+                        <tr><td>2</td><td>7</td><td>CERT</td><td>"LOGGED_IN"</td></tr>
+                        <tr><td>3</td><td>1</td><td>FALS</td><td>"RETRY"</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓ 4: PSEUDOCODIC TERMINAL -->
+        <section>
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span class="text-[8px] text-gray-500 ml-4">Terminal: pseudo_compiler.sh</span>
+            </div>
+            <div class="bg-black border-4 border-gray-800 p-8 text-blue-400 font-mono text-[9px] leading-relaxed relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none"></div>
+                <p class="mb-4 text-gray-600 uppercase border-b border-gray-800 pb-2">// SCRIPT D'EXEMPLE: VALIDACIÓ DE NIVELL</p>
+                <p><span class="text-purple-500">ALGORITME</span> Validacio_Goblin</p>
+                <p><span class="text-purple-500">VAR</span></p>
+                <p>&nbsp;&nbsp;xp : SENCER;</p>
+                <p>&nbsp;&nbsp;status : CADENA;</p>
+                <br>
+                <p><span class="text-green-400">ESCRIURE</span>("Entra la teva XP:");</p>
+                <p><span class="text-green-400">LLEGIR</span>(xp);</p>
+                <br>
+                <p><span class="text-yellow-500">SI</span> (xp >= 100) <span class="text-yellow-500">LLAVORS</span></p>
+                <p>&nbsp;&nbsp;status = "GOBLIN_KING";</p>
+                <p><span class="text-yellow-500">SINO</span></p>
+                <p>&nbsp;&nbsp;status = "MINION";</p>
+                <p><span class="text-yellow-500">FI_SI</span></p>
+                <br>
+                <p><span class="text-green-400">ESCRIURE</span>("Ets un: " + status);</p>
+                <p><span class="text-purple-500">FINAL_ALGORITME</span></p>
+            </div>
+        </section>
+
+        <!-- FOOTER LOG AMB PERSONATGE GOBLIN -->
+        <footer class="mt-20 border-t-4 border-white/10 pt-10 pb-20">
+            <div class="pixel-border p-6 bg-blue-900/10 flex flex-col md:flex-row items-center gap-6">
+                <!-- PERSONATGE GOBLIN PIXEL-ART -->
+                <div class="w-16 h-16 bg-black border-2 border-blue-400 p-1 shrink-0 flex items-center justify-center">
+                    <svg viewBox="0 0 16 16" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+                        <!-- Orelles -->
+                        <path d="M3 7h2v2H3zM11 7h2v2H11z" fill="#22c55e" />
+                        <path d="M2 8h1v1H2zM13 8h1v1H13z" fill="#166534" />
+                        <!-- Cap/Cos -->
+                        <path d="M5 5h6v7H5z" fill="#22c55e" />
+                        <!-- Ojos -->
+                        <path d="M6 7h1v1H6zM9 7h1v1H9z" fill="#000" />
+                        <!-- Boca -->
+                        <path d="M7 10h2v1H7z" fill="#166534" />
+                        <!-- Roba -->
+                        <path d="M5 12h6v2H5z" fill="#451a03" />
+                    </svg>
+                </div>
+                <div>
+                    <p id="MISSION_REPORT_01" class="text-blue-400 text-[8px] mb-2 uppercase tracking-widest font-bold">MISSION_REPORT_01:</p>
+                    <p class="text-gray-400 text-[7px] italic uppercase leading-relaxed">
+                        "Recorda: Un programa és tan bo com la lògica que hi ha darrere. Si el teu Flowchart té forats, el teu codi també en tindrà. No saltis la fase d'anàlisi!"
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mt-12 flex justify-center">
+                <button onclick="window.close()" 
+                        class="px-10 py-5 bg-white text-black font-bold text-[9px] uppercase border-b-8 border-r-8 border-gray-500 active:translate-y-2 active:border-none transition-all hover:bg-yellow-400">
+                    << RETURN_TO_SYSTEM
+                </button>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        window.addEventListener('load', () => {
+            console.log("%c SYSTEM_REPORT: TEXT_CLARITY_OPTIMIZED ", "background: #000; color: #22c55e; font-weight: bold;");
+        });
+    </script>
+</body>
+</html>
