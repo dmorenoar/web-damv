@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIVELL 2: Estructures de Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pixel-bg: #0a0118;
+            --pixel-accent: #f2ea02; 
+            --pixel-success: #00ff41; 
+            --pixel-blue: #00d2ff;   
+            --pixel-purple: #bd00ff;
+            --pixel-border: #ffffff;
+            --pixel-red: #ff4141;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--pixel-bg);
+            color: #ffffff;
+            font-size: 10px;
+            overflow-x: hidden;
+            min-height: 100vh;
+            line-height: 1.8;
+            image-rendering: pixelated;
+        }
+
+        .background-container {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: -2;
+            background: linear-gradient(to bottom, #000000 0%, #0a0118 50%, #240046 100%);
+            perspective: 800px;
+        }
+
+        .retro-grid {
+            position: absolute; width: 200%; height: 200%; bottom: -50%; left: -50%;
+            background-image: linear-gradient(rgba(189, 0, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(189, 0, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; transform: rotateX(60deg);
+            animation: gridScroll 10s linear infinite;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(50px); }
+        }
+
+        .hud-bar {
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 4px solid var(--pixel-border);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .stat-group { display: flex; align-items: center; gap: 10px; }
+        .xp-bar-bg { width: 120px; height: 12px; background: #222; border: 2px solid #fff; position: relative; }
+        .xp-bar-fill { height: 100%; background: var(--pixel-success); width: 0%; transition: width 0.3s; box-shadow: inset -2px 0 0 #008021; }
+
+        .terminal-box {
+            background: rgba(15, 0, 30, 0.95);
+            border: 4px solid var(--pixel-border);
+            box-shadow: 10px 10px 0px #000;
+            position: relative;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        .code-snippet {
+            background: #000;
+            border-left: 4px solid var(--pixel-blue);
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            color: var(--pixel-success);
+            overflow-x: auto;
+            line-height: 2.2;
+        }
+
+        .highlight { color: var(--pixel-accent); }
+        .keyword { color: #ff00ff; }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--pixel-accent);
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pixel-icon { width: 32px; height: 32px; flex-shrink: 0; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 7px; }
+        th, td { border: 2px solid #444; padding: 12px; text-align: left; }
+        th { background: #222; color: var(--pixel-blue); }
+
+        .btn-arcade {
+            background: var(--pixel-accent); color: black; padding: 12px;
+            border-bottom: 6px solid #b5af00; border-right: 6px solid #b5af00;
+            transition: all 0.1s; text-transform: uppercase; font-size: 8px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+        }
+        .btn-arcade:active { border: none; transform: translate(4px, 4px); }
+
+        canvas { image-rendering: pixelated; background: #5c94fc; border: 4px solid #333; }
+
+        #npc-toast {
+            position: fixed; bottom: 20px; right: 20px;
+            background: white; color: black; padding: 15px;
+            border: 4px solid black; display: none; z-index: 2000;
+            max-width: 250px; font-size: 7px; box-shadow: 8px 8px 0 rgba(0,0,0,0.5);
+            line-height: 1.6;
+        }
+
+        .controls-hint {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 6px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-container">
+        <div class="retro-grid"></div>
+    </div>
+
+    <!-- HUD BAR -->
+    <div class="hud-bar">
+        <div class="stat-group">
+            <span class="text-yellow-400 text-[9px]">P1</span>
+            <div class="text-[7px]">
+                <div>DANI_PROF</div>
+                <div class="text-red-500">HP: [||||||||||]</div>
+            </div>
+        </div>
+        <div class="stat-group">
+            <span class="text-blue-400 text-[8px]">LVL <span id="lvl-count">02</span></span>
+            <div class="xp-bar-bg">
+                <div id="xp-fill" class="xp-bar-fill"></div>
+            </div>
+        </div>
+        <div class="stat-group hidden md:flex">
+            <span class="text-green-500 text-[7px]">MISSION: NIVELL_2</span>
+        </div>
+    </div>
+
+    <nav class="p-6">
+        <div class="max-w-5xl mx-auto">
+            <button onclick="window.history.back()" class="text-yellow-400 hover:scale-105 transition-transform text-[8px] uppercase font-bold">
+                << TORNA_A_LA_BASE
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-4">
+        
+        <div class="mb-12 border-l-8 border-purple-500 pl-8">
+            <h1 class="text-2xl text-white uppercase tracking-tighter mb-3">🧠 Nivell 2 — Estructures de Control</h1>
+            <p class="text-gray-500 text-[7px] uppercase tracking-widest">La lògica que pren decisions i controla el flux</p>
+        </div>
+
+        <!-- 1. DECISIONS (MARIO) -->
+        <section class="terminal-box" onclick="gainXP(10)">
+            <div class="scanline"></div>
+            <h2 class="section-title">
+                <svg class="pixel-icon text-red-500" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M5 1h6v1H5V1zm-1 1h9v1H4V2zm0 1h1v1H4V3zm4 0h1v1H8V3zm4 0h1v1h-1V3zM3 4h2v1H3V4zm5 0h1v1H8V4zm4 0h2v1h-2V4zM3 5h1v1H3V5zm10 0h1v1h-1V5zM4 6h8v1H4V6zm1 1h6v1H5V7zm-1 1h8v1H4V8zM3 9h10v1H3V9zm-1 1h12v1H2v-1zM4 11h2v3H4v-3zm6 0h2v3h-2v-3z"/>
+                </svg>
+                1. Estructures de control (decisió)
+            </h2>
+            <p class="text-gray-400 mb-6">Permeten que el joc prengui camins diferents segons les circumstàncies.</p>
+            
+            <div class="grid grid-cols-1 gap-8">
+                <!-- if -->
+                <div class="p-4 border border-green-500 bg-green-900/10">
+                    <h3 class="text-green-400 text-[8px] mb-2 uppercase font-bold">🟢 if: Cas Únic</h3>
+                    <pre class="code-snippet">
+<span class="keyword">int</span> health = 30;
+<span class="keyword">if</span> (health <= 0) {
+    Console.WriteLine(<span class="highlight">"Game Over"</span>);
+}</pre>
+                    <p class="text-gray-500 text-[6px] italic">🎮 Si la vida arriba a 0 → el jugador mor.</p>
+                </div>
+
+                <!-- if-else -->
+                <div class="p-4 border border-yellow-500 bg-yellow-900/10">
+                    <h3 class="text-yellow-400 text-[8px] mb-2 uppercase font-bold">🟡 if - else: Dues alternatives</h3>
+                    <pre class="code-snippet">
+<span class="keyword">int</span> ammo = 0;
+<span class="keyword">if</span> (ammo > 0) {
+    Console.WriteLine(<span class="highlight">"Dispares!"</span>);
+} <span class="keyword">else</span> {
+    Console.WriteLine(<span class="highlight">"No tens munició!"</span>);
+}</pre>
+                    <p class="text-gray-500 text-[6px] italic">🎮 Si tens bales → dispares. Si no → has de recarregar.</p>
+                </div>
+
+                <!-- if-else if -->
+                <div class="p-4 border border-red-500 bg-red-900/10">
+                    <h3 class="text-red-400 text-[8px] mb-2 uppercase font-bold">🟠 if - else if - else: Múltiples estats</h3>
+                    <pre class="code-snippet">
+<span class="keyword">int</span> score = 750;
+<span class="keyword">if</span> (score >= 1000) {
+    Console.WriteLine(<span class="highlight">"Rang: Or"</span>);
+} <span class="keyword">else if</span> (score >= 500) {
+    Console.WriteLine(<span class="highlight">"Rang: Plata"</span>);
+} <span class="keyword">else</span> {
+    Console.WriteLine(<span class="highlight">"Rang: Bronze"</span>);
+}</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. SWITCH (MEGA MAN) -->
+        <section class="terminal-box border-blue-600" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-blue-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8v1h2v2h1v6h-1v2H4v-2H2V5h2V2zm1 2v2H4V4h1zm7 0h1v2h-1V4zM6 8h4v2H6V8z"/></svg>
+                2. Switch: Estats Discrets
+            </h2>
+            <pre class="code-snippet">
+<span class="keyword">int</span> option = 2;
+<span class="keyword">switch</span> (option) {
+    <span class="keyword">case</span> 1: Console.WriteLine(<span class="highlight">"Nova partida"</span>); <span class="keyword">break</span>;
+    <span class="keyword">case</span> 2: Console.WriteLine(<span class="highlight">"Carregar partida"</span>); <span class="keyword">break</span>;
+    <span class="keyword">default</span>: Console.WriteLine(<span class="highlight">"Opció no vàlida"</span>); <span class="keyword">break</span>;
+}</pre>
+        </section>
+
+        <!-- 3. REPETICIÓ (PAC-MAN) -->
+        <section class="terminal-box border-green-500" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-yellow-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8v1h2v2h1v8h-1v2h-2v1H4v-1H2v-2H1V4h1V2h2V1zm5 5h2v2H9V6z"/></svg>
+                3. Estructures de repetició (bucles)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-3 border border-blue-400 bg-blue-900/10">
+                    <h4 class="text-blue-400 text-[7px] mb-2 uppercase">for</h4>
+                    <p class="text-[6px] mb-2">Per a repeticions conegudes.</p>
+                    <pre class="code-snippet" style="font-size: 6px;">for(int i=1; i<=3; i++)</pre>
+                </div>
+                <div class="p-3 border border-purple-400 bg-purple-900/10">
+                    <h4 class="text-purple-400 text-[7px] mb-2 uppercase">while</h4>
+                    <p class="text-[6px] mb-2">Mentre sigui cert.</p>
+                    <pre class="code-snippet" style="font-size: 6px;">while(lives > 0)</pre>
+                </div>
+                <div class="p-3 border border-orange-400 bg-orange-900/10">
+                    <h4 class="text-orange-400 text-[7px] mb-2 uppercase">do-while</h4>
+                    <p class="text-[6px] mb-2">Almenys un cop.</p>
+                    <pre class="code-snippet" style="font-size: 6px;">do{...}while(c);</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- SUPER MARIO PLATFORMER SIMULATOR -->
+        <div class="terminal-box border-red-500 overflow-hidden">
+            <div class="scanline"></div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-red-500 uppercase text-[9px]">LEVEL_2_BOSS: CODE_RUNNER</h2>
+                <div class="flex gap-4 items-center">
+                    <span class="text-[7px] text-yellow-400 uppercase font-bold">DATA_COLLECTED: <span id="mario-score">0</span></span>
+                    <button onclick="resetMario()" class="text-[6px] bg-red-900 px-3 py-1 border border-red-500 uppercase">Respawn</button>
+                </div>
+            </div>
+            
+            <canvas id="marioCanvas" class="w-full h-[300px]"></canvas>
+            
+            <div class="controls-hint">
+                <span>[←][→] MOURE</span>
+                <span>[ESPAI] SALT</span>
+                <span>OBJECTIU: RECOLLIR MONEDES PER PROCESSAR LOOPS</span>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="npc-toast"></div>
+
+    <script>
+        let xp = 0, lvl = 2;
+        function gainXP(amount) {
+            xp += amount;
+            if (xp >= 100) { 
+                xp = 0; lvl++; 
+                document.getElementById('lvl-count').innerText = lvl.toString().padStart(2, '0'); 
+                showToast("¡NIVELL UP! La teva lògica és imparable."); 
+            }
+            document.getElementById('xp-fill').style.width = xp + "%";
+        }
+        function showToast(text) { 
+            const toast = document.getElementById('npc-toast'); 
+            toast.innerText = text; toast.style.display = 'block'; 
+            setTimeout(() => toast.style.display = 'none', 3000); 
+        }
+
+        // --- SUPER MARIO ENGINE ---
+        const canvas = document.getElementById('marioCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('mario-score');
+
+        let score = 0;
+        const gravity = 0.5;
+        const player = {
+            x: 50, y: 200, width: 20, height: 20,
+            dx: 0, dy: 0, speed: 4, jumpPower: -10,
+            grounded: false, color: "#ff4141"
+        };
+
+        let platforms = [];
+        let coins = [];
+
+        function initMario() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // Generate world
+            platforms = [
+                { x: 0, y: canvas.height - 20, w: canvas.width, h: 20 }, // Floor
+                { x: 100, y: 220, w: 60, h: 10 },
+                { x: 220, y: 170, w: 60, h: 10 },
+                { x: 340, y: 120, w: 60, h: 10 },
+                { x: 450, y: 180, w: 60, h: 10 }
+            ];
+
+            coins = [
+                { x: 120, y: 190, collected: false },
+                { x: 240, y: 140, collected: false },
+                { x: 360, y: 90, collected: false },
+                { x: 470, y: 150, collected: false }
+            ];
+        }
+
+        const keys = {};
+        window.addEventListener("keydown", e => keys[e.code] = true);
+        window.addEventListener("keyup", e => keys[e.code] = false);
+
+        function updateMario() {
+            // Movement
+            if (keys["ArrowRight"]) player.dx = player.speed;
+            else if (keys["ArrowLeft"]) player.dx = -player.speed;
+            else player.dx = 0;
+
+            if (keys["Space"] && player.grounded) {
+                player.dy = player.jumpPower;
+                player.grounded = false;
+            }
+
+            player.dy += gravity;
+            player.x += player.dx;
+            player.y += player.dy;
+
+            // Screen boundaries
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            // Collisions
+            player.grounded = false;
+            platforms.forEach(p => {
+                if (player.x < p.x + p.w && player.x + player.width > p.x &&
+                    player.y + player.height > p.y && player.y + player.height < p.y + p.h + player.dy) {
+                    player.grounded = true;
+                    player.dy = 0;
+                    player.y = p.y - player.height;
+                }
+            });
+
+            // Coins
+            coins.forEach(c => {
+                if (!c.collected && player.x < c.x + 10 && player.x + player.width > c.x &&
+                    player.y < c.y + 10 && player.y + player.height > c.y) {
+                    c.collected = true;
+                    score++;
+                    scoreEl.innerText = score;
+                    gainXP(5);
+                    showToast("LOOP_ITERATED: XP++");
+                    
+                    // Respawn coins if all collected
+                    if (coins.every(coin => coin.collected)) {
+                        setTimeout(() => coins.forEach(coin => coin.collected = false), 1000);
+                    }
+                }
+            });
+
+            // Pit fall
+            if (player.y > canvas.height) resetMario();
+        }
+
+        function drawMario() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Sky
+            ctx.fillStyle = "#5c94fc";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Platforms
+            ctx.fillStyle = "#8b4513"; // Brown
+            platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+
+            // Player (Mario-ish)
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // Hat detail
+            ctx.fillStyle = "white";
+            ctx.fillRect(player.x + 5, player.y + 2, 10, 3);
+
+            // Coins
+            ctx.fillStyle = "#f2ea02";
+            coins.forEach(c => {
+                if (!c.collected) {
+                    ctx.beginPath();
+                    ctx.arc(c.x + 5, c.y + 5, 5, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            });
+        }
+
+        function marioLoop() {
+            updateMario();
+            drawMario();
+            requestAnimationFrame(marioLoop);
+        }
+
+        function resetMario() {
+            player.x = 50; player.y = 200; player.dy = 0;
+            if(score > 0) showToast("RESTARTING_SIMULATION...");
+        }
+
+        window.onload = () => {
+            initMario();
+            marioLoop();
+            gainXP(15);
+            showToast("Nivell 2 Carregat: Control de Flux.");
+        };
+
+        window.addEventListener('resize', initMario);
+    </script>
+</body>
+</html>

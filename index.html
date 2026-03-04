@@ -81,7 +81,7 @@
             background: repeating-linear-gradient(90deg, var(--bar-color), var(--bar-color) 12px, #000 12px, #000 14px);
         }
 
-        /* --- FONDO DIN��MIC --- */
+        /* --- FONDO DIN��MIC --- */
         .background-container {
             position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; z-index: -2;
@@ -138,7 +138,7 @@
             transform-style: preserve-3d;
         }
 
-        /* --- EFECTO VERDE MATRIX EN IM��GENES --- */
+        /* --- EFECTO VERDE MATRIX EN IM��GENES --- */
         .course-card img {
             filter: brightness(0.6) contrast(1.4) sepia(1) hue-rotate(80deg) saturate(3) !important;
             transition: all 0.4s ease-in-out !important;
@@ -532,17 +532,18 @@
         };
 
         const syllabus = [
-            { id: 1, title: "Algoritmia i Flowcharts", module: "M0485", ra: ["RA1", "RA3"], desc: "Disseny de lògica base mitjançant diagrames estructurats.", img: "assets/m1.png", url: "algoritmia-flowcharts.html" },
+            { id: 1, title: "Variables, Tipus i Operadors", module: "M0485", ra: ["RA1", "RA3"], desc: "Les variables són caixes de memòria amb nom i tipus que guarden valors, i els operadors són les eines per comparar-los, calcular-los i combinar-los en condicions lògiques.", img: "assets/m1.png", url: "variables-tipus-operadors.html" },
             { id: 2, title: "Git i Control de Versions", module: "M0487", ra: ["RA1"], desc: "Gestió professional del codi font y branques.", img: "assets/m2.png", url: "git-control-de-versions.html" },
             { id: 3, title: "Entorns IDE i Debugging", module: "M0487", ra: ["RA2"], desc: "Domini de Visual Studio i eines de depuració.", img: "assets/m3.png", url: "entorns-ide-debugging.html" },
             { id: 4, title: "Modularitat i Mètodes", module: "M0485", ra: ["RA2", "RA3"], desc: "Fragmentació de problemes en unitats funcionals.", img: "assets/m4.png", url: "modularitat-metodes.html" },
             { id: 5, title: "Refactoring i Optimització", module: "M0487", ra: ["RA4"], desc: "Millora del rendiment del codi font existent.", img: "assets/m5.png", url: "refactoring-optimitzacio.html" },
-            { id: 6, title: "Disseny de Classes POO", module: "M0485", ra: ["RA4"], desc: "Objectes, classes, herència i polimorfisme en C#.", img: "assets/m6.png", url: "disseny-classes-poo.html" },
-            { id: 7, title: "Modelatge UML", module: "M0487", ra: ["RA5", "RA6"], desc: "Disseny visual de sistemes mitjançant diagrames.", img: "assets/m7.png", url: "modelatge-uml.html" },
-            { id: 8, title: "Herència i Interfícies", module: "M0485", ra: ["RA7"], desc: "Relacions de classes avanzades y contractes.", img: "assets/m8.png", url: "herencia-interficies.html" },
-            { id: 9, title: "Col·leccions Genèriques", module: "M0485", ra: ["RA6"], desc: "Gestió de dades dinàmiques amb Llistes y Piles.", img: "assets/m9.png", url: "colleccions-generiques.html" },
-            { id: 10, title: "Persistència DAO / DTO", module: "M0485", ra: ["RA8", "RA9"], desc: "Accés y gestió de dades persistents en DB.", img: "assets/m10.png", url: "persistencia-dao-dto.html" },
-            { id: 11, title: "Unit Testing", module: "M0487", ra: ["RA3"], desc: "Verificació automàtica de la qualitat del software.", img: "assets/m11.png", url: "unit-testing.html" }
+            //{ id: 6, title: "Disseny de Classes POO", module: "M0485", ra: ["RA4"], desc: "Objectes, classes, herència i polimorfisme en C#.", img: "assets/m6.png", url: "disseny-classes-poo.html" },
+            //{ id: 7, title: "Modelatge UML", module: "M0487", ra: ["RA5", "RA6"], desc: "Disseny visual de sistemes mitjançant diagrames.", img: "assets/m7.png", url: "modelatge-uml.html" },
+            //{ id: 8, title: "Herència i Interfícies", module: "M0485", ra: ["RA7"], desc: "Relacions de classes avanzades y contractes.", img: "assets/m8.png", url: "herencia-interficies.html" },
+            //{ id: 9, title: "Col·leccions Genèriques", module: "M0485", ra: ["RA6"], desc: "Gestió de dades dinàmiques amb Llistes y Piles.", img: "assets/m9.png", url: "colleccions-generiques.html" },
+            //{ id: 10, title: "Persistència DAO / DTO", module: "M0485", ra: ["RA8", "RA9"], desc: "Accés y gestió de dades persistents en DB.", img: "assets/m10.png", url: "persistencia-dao-dto.html" },
+            { id: 11, title: "Unit Testing", module: "M0487", ra: ["RA3"], desc: "Verificació automàtica de la qualitat del software.", img: "assets/m11.png", url: "unit-testing.html" },
+            { id: 12, title: "Estructures de control", module: "M0485", ra: ["RA1", "RA3"], desc: "Les estructures de control decideixen quins blocs de codi s'executen, quantes vegades i en quines condicions, donant-li al programa la capacitat de prendre decisions i repetir accions.", img: "assets/m12.png", url: "est-de-control.html" }
         ];
 
         const follower = document.getElementById('pointerFollower');
@@ -640,7 +641,7 @@
             if (activeBtn) {
                 activeBtn.classList.remove('bg-[#1a0133]', 'text-white', 'border-purple-900');
                 
-                // ASIGNACI��N DE COLOR SEG��N CATEGOR��A
+                // ASIGNACI��N DE COLOR SEG��N CATEGOR��A
                 if (mod === 'ALL') activeBtn.classList.add('bg-yellow-400', 'text-black', 'border-yellow-700', 'border-b-4', 'border-r-4');
                 if (mod === 'M0485') activeBtn.classList.add('bg-[#00d2ff]', 'text-black', 'border-blue-700', 'border-b-4', 'border-r-4');
                 if (mod === 'M0487') activeBtn.classList.add('bg-[#bd00ff]', 'text-black', 'border-purple-700', 'border-b-4', 'border-r-4');
@@ -678,7 +679,7 @@
             container.innerHTML = filtered.map(item => {
                 const moduleColor = item.module === 'M0485' ? '#00d2ff' : '#bd00ff';
                 return `
-                <div class="card-container glitch-active" onclick="window.open('${item.url}', '_blank')">
+                <div class="card-container glitch-active" onclick="window.open('${item.url}', '_parent')">
                     <div class="mouse-overlay"></div>
                     <div class="card-wrapper" style="--card-border-color: ${moduleColor}">
                         <div class="course-card">

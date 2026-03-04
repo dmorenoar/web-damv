@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIVELL 5: Modularitat i Mètodes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pixel-bg: #0a0118;
+            --pixel-accent: #f2ea02; 
+            --pixel-success: #00ff41; 
+            --pixel-blue: #00d2ff;   
+            --pixel-purple: #bd00ff;
+            --pixel-border: #ffffff;
+            --pixel-red: #ff4141;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--pixel-bg);
+            color: #ffffff;
+            font-size: 10px;
+            overflow-x: hidden;
+            min-height: 100vh;
+            line-height: 1.8;
+            image-rendering: pixelated;
+        }
+
+        .background-container {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: -2;
+            background: linear-gradient(to bottom, #000000 0%, #0a0118 50%, #240046 100%);
+            perspective: 800px;
+        }
+
+        .retro-grid {
+            position: absolute; width: 200%; height: 200%; bottom: -50%; left: -50%;
+            background-image: linear-gradient(rgba(189, 0, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(189, 0, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; transform: rotateX(60deg);
+            animation: gridScroll 10s linear infinite;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(50px); }
+        }
+
+        .hud-bar {
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 4px solid var(--pixel-border);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .stat-group { display: flex; align-items: center; gap: 10px; }
+        .xp-bar-bg { width: 120px; height: 12px; background: #222; border: 2px solid #fff; position: relative; }
+        .xp-bar-fill { height: 100%; background: var(--pixel-success); width: 0%; transition: width 0.3s; box-shadow: inset -2px 0 0 #008021; }
+
+        .terminal-box {
+            background: rgba(15, 0, 30, 0.95);
+            border: 4px solid var(--pixel-border);
+            box-shadow: 10px 10px 0px #000;
+            position: relative;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        .code-snippet {
+            background: #000;
+            border-left: 4px solid var(--pixel-blue);
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            color: var(--pixel-success);
+            overflow-x: auto;
+            line-height: 2.2;
+        }
+
+        .highlight { color: var(--pixel-accent); }
+        .keyword { color: #ff00ff; }
+        .comment { color: #666; }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--pixel-accent);
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pixel-icon { width: 32px; height: 32px; flex-shrink: 0; }
+
+        .btn-arcade {
+            background: var(--pixel-accent); color: black; padding: 12px;
+            border-bottom: 6px solid #b5af00; border-right: 6px solid #b5af00;
+            transition: all 0.1s; text-transform: uppercase; font-size: 8px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+        }
+        .btn-arcade:active { border: none; transform: translate(4px, 4px); }
+
+        canvas { image-rendering: pixelated; background: #000; border: 4px solid #333; cursor: none; }
+
+        #npc-toast {
+            position: fixed; bottom: 20px; right: 20px;
+            background: white; color: black; padding: 15px;
+            border: 4px solid black; display: none; z-index: 2000;
+            max-width: 250px; font-size: 7px; box-shadow: 8px 8px 0 rgba(0,0,0,0.5);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-container">
+        <div class="retro-grid"></div>
+    </div>
+
+    <!-- HUD BAR -->
+    <div class="hud-bar">
+        <div class="stat-group">
+            <span class="text-yellow-400 text-[9px]">P1</span>
+            <div class="text-[7px]">
+                <div>DANI_PROF</div>
+                <div class="text-red-500">HP: [||||||||||]</div>
+            </div>
+        </div>
+        <div class="stat-group">
+            <span class="text-blue-400 text-[8px]">LVL <span id="lvl-count">05</span></span>
+            <div class="xp-bar-bg">
+                <div id="xp-fill" class="xp-bar-fill"></div>
+            </div>
+        </div>
+        <div class="stat-group hidden md:flex">
+            <span class="text-green-500 text-[7px]">MISSION: MODULARITAT</span>
+        </div>
+    </div>
+
+    <nav class="p-6">
+        <div class="max-w-5xl mx-auto">
+            <button onclick="window.history.back()" class="text-yellow-400 hover:scale-105 transition-transform text-[8px] uppercase font-bold">
+                << TORNA_A_LA_BASE
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-4">
+        
+        <div class="mb-12 border-l-8 border-blue-500 pl-8">
+            <h1 class="text-2xl text-white uppercase tracking-tighter mb-3">🧠 Nivell 5 — Modularitat i Mètodes</h1>
+            <p class="text-gray-500 text-[7px] uppercase tracking-widest">Divideix i venceràs: arquitectura de codi professional</p>
+        </div>
+
+        <!-- 1. MODULARITAT (MARIO) -->
+        <section class="terminal-box" onclick="gainXP(10)">
+            <div class="scanline"></div>
+            <h2 class="section-title">
+                <svg class="pixel-icon text-red-500" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M5 1h6v1H5V1zm-1 1h9v1H4V2zm0 1h1v1H4V3zm4 0h1v1H8V3zm4 0h1v1h-1V3zM3 4h2v1H3V4zm5 0h1v1H8V4zm4 0h2v1h-2V4zM3 5h1v1H3V5zm10 0h1v1h-1V5zM4 6h8v1H4V6zm1 1h6v1H5V7zm-1 1h8v1H4V8zM3 9h10v1H3V9zm-1 1h12v1H2v-1zM4 11h2v3H4v-3zm6 0h2v3h-2v-3z"/>
+                </svg>
+                1. Què és la modularitat?
+            </h2>
+            <p class="text-gray-400 mb-6">La modularitat és el principi de dividir un programa gran en parts més petites i independents anomenades mòduls o mètodes.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-blue-300 text-[8px] mb-4 uppercase underline">🎯 Objectiu:</h3>
+                    <ul class="space-y-2 text-[7px] text-gray-300">
+                        <li><span class="text-blue-400">>></span> Fer el codi més llegible</li>
+                        <li><span class="text-blue-400">>></span> Facilitar el manteniment</li>
+                        <li><span class="text-blue-400">>></span> Reutilitzar funcionalitats</li>
+                        <li><span class="text-blue-400">>></span> Millorar el debugging</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-blue-900/10 border border-blue-500 text-[7px]">
+                    <p class="text-blue-400 mb-2 font-bold">EN VIDEOJOCS:</p>
+                    <p class="text-gray-400 italic">Cada part ha d'estar separada: Sistema de vida, Moviment, Combat, IA d'enemics, Puntuació.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. MÈTODE (SONIC) -->
+        <section class="terminal-box border-blue-600" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-blue-500" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M2 2h4v1H2V2zm6 0h6v1H8V2zm-6 3h12v1H2V5zm0 3h8v1H2V8zm0 3h12v1H2v-3z"/>
+                </svg>
+                2. Què és un mètode?
+            </h2>
+            <p class="text-gray-400 mb-4">Un mètode és un bloc de codi que realitza una tasca concreta. En C#, un mètode té aquesta estructura:</p>
+            <pre class="code-snippet">
+ModificadorAcces TipusRetorn NomMetode(Paràmetres)
+{
+    <span class="comment">// Cos del mètode</span>
+}</pre>
+            <h4 class="text-yellow-400 text-[8px] mt-6 mb-2 uppercase">Exemple:</h4>
+            <pre class="code-snippet">
+<span class="keyword">public void</span> MostrarMissatge()
+{
+    Console.WriteLine(<span class="highlight">"Has iniciat el joc!"</span>);
+}</pre>
+        </section>
+
+        <!-- 3. PARTS D'UN MÈTODE (LINK) -->
+        <section class="terminal-box border-yellow-500" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-yellow-500" viewBox="0 0 16 16" fill="currentColor"><path d="M7 2h2v2H7V2zm-2 4h6v2H5V6zm-2 4h10v2H3v-2zm-2 4h14v2H1v-2z"/></svg>
+                3. Parts d'un mètode
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-[7px]">
+                <div>
+                    <p><span class="text-blue-400">🔐 Modificador d’accés:</span> public, private, protected.</p>
+                    <p class="mt-4"><span class="text-blue-400">🔁 Tipus de retorn:</span> void (no retorna res), int, float, bool, string...</p>
+                </div>
+                <div>
+                    <p><span class="text-blue-400">🏷 Nom del mètode:</span> Segueix PascalCase (ex: <span class="text-green-400">CalcularDany()</span>).</p>
+                    <p class="mt-4"><span class="text-blue-400">📥 Paràmetres:</span> Permeten enviar informació al mètode.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. TIPUS DE MÈTODES (MEGA MAN) -->
+        <section class="terminal-box border-blue-400" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-blue-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8v1h2v2h1v6h-1v2H4v-2H2V5h2V2zm1 2v2H4V4h1zm7 0h1v2h-1V4zM6 8h4v2H6V8z"/></svg>
+                4. Tipus de mètodes
+            </h2>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="text-purple-400 text-[8px] mb-2 uppercase underline">🔹 Mètodes sense retorn (void)</h4>
+                    <p class="text-[7px] text-gray-400 mb-2">Fan una acció però no retornen cap valor (sons, animacions, UI).</p>
+                    <pre class="code-snippet">
+<span class="keyword">public void</span> ReproduirSoImpacte()
+{
+    Console.WriteLine(<span class="highlight">"So d'impacte!"</span>);
+}</pre>
+                </div>
+                <div>
+                    <h4 class="text-blue-400 text-[8px] mb-2 uppercase underline">🔹 Mètodes amb retorn</h4>
+                    <p class="text-[7px] text-gray-400 mb-2">Retornen un valor calculat (lògica matemàtica de combat).</p>
+                    <pre class="code-snippet">
+<span class="keyword">public int</span> CalcularDany(<span class="keyword">int</span> atac, <span class="keyword">int</span> defensa)
+{
+    <span class="keyword">int</span> danyFinal = atac - defensa;
+    <span class="keyword">return</span> danyFinal;
+}</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. EXEMPLE NO MODULARITZAT (GHOST) -->
+        <section class="terminal-box border-red-500" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-red-500" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1h1v1h1v1h1v1h1v1h1v1h1v4h-1v1h-1v1h-1v1h-1v1h-1v1H8v-1H7v-1H6v-1H5v-1H4v-1H3v-1H2V6h1V5h1V4h1V3h1V2h1V1h1z"/></svg>
+                5. Codi sense modularitzar
+            </h2>
+            <p class="text-gray-400 mb-4 text-[7px]">Imaginem un sistema d’atac escrit tot dins del Main:</p>
+            <pre class="code-snippet">
+<span class="keyword">int</span> atac = 50, defensa = 20, vidaEnemic = 100;
+<span class="keyword">int</span> dany = atac - defensa;
+<span class="keyword">if</span> (dany < 0) dany = 0;
+vidaEnemic = vidaEnemic - dany;
+Console.WriteLine(<span class="highlight">"Vida restant: "</span> + vidaEnemic);</pre>
+        </section>
+
+        <!-- 6. EXEMPLE MODULARITZAT (KIRBY) -->
+        <section class="terminal-box border-purple-500" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-pink-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3h8v1h2v8h-2v1H4v-1H2V4h2V3zm2 3h1v2H6V6zm4 0h1v2h-1V6zM6 10h4v1H6v-1z"/></svg>
+                6. Exemple modularitzat
+            </h2>
+            <pre class="code-snippet">
+<span class="keyword">public static int</span> CalcularDany(<span class="keyword">int</span> atac, <span class="keyword">int</span> defensa) {
+    <span class="keyword">int</span> dany = atac - defensa;
+    <span class="keyword">if</span> (dany < 0) dany = 0;
+    <span class="keyword">return</span> dany;
+}
+
+<span class="keyword">public static int</span> AplicarDany(<span class="keyword">int</span> vidaActual, <span class="keyword">int</span> dany) {
+    <span class="keyword">return</span> vidaActual - dany;
+}</pre>
+            <p class="text-gray-400 mt-4 text-[7px]">Ara el Main queda molt més net i professional:</p>
+            <pre class="code-snippet">
+<span class="keyword">int</span> danyCalculat = CalcularDany(atacJugador, defensaEnemic);
+vidaEnemic = AplicarDany(vidaEnemic, danyCalculat);</pre>
+        </section>
+
+        <!-- 7. AVANTATGES (PAC-MAN) -->
+        <section class="terminal-box border-yellow-400" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-yellow-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8v1h2v2h1v8h-1v2h-2v1H4v-1H2v-2H1V4h1V2h2V1zm5 5h2v2H9V6z"/></svg>
+                7. Avantatges de la modularitat
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-[7px]">
+                <ul class="space-y-3">
+                    <li><span class="text-green-500">✔</span> Evita repetir codi</li>
+                    <li><span class="text-green-500">✔</span> Facilita el testing</li>
+                    <li><span class="text-green-500">✔</span> Permet treball en equip</li>
+                </ul>
+                <ul class="space-y-3">
+                    <li><span class="text-green-500">✔</span> Millora la llegibilitat</li>
+                    <li><span class="text-green-500">✔</span> Redueix errors lògics</li>
+                    <li><span class="text-green-500">✔</span> Escalabilitat del joc</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- METHOD_BREAKOUT: ARKANOID GAME -->
+        <div class="terminal-box border-blue-400 overflow-hidden">
+            <div class="scanline"></div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-blue-400 uppercase text-[9px]">METHOD_BREAKOUT: MODULAR_CORE</h2>
+                <div class="flex gap-4 items-center">
+                    <span class="text-[7px] text-yellow-400 uppercase font-bold">MODULES_EXECUTED: <span id="game-score">0</span></span>
+                    <button onclick="resetGame()" class="text-[6px] bg-red-900 px-3 py-1 border border-red-500 uppercase">Reset_Data</button>
+                </div>
+            </div>
+            
+            <canvas id="arkanoidCanvas" class="w-full h-[350px] mx-auto block"></canvas>
+            
+            <div class="mt-4 text-center">
+                <p class="text-[6px] text-gray-500 uppercase tracking-widest animate-pulse">Mou el ratolí per controlar el compilador (Paddle)</p>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="npc-toast"></div>
+
+    <script>
+        let xp = 0, lvl = 5;
+        function gainXP(amount) {
+            xp += amount;
+            if (xp >= 100) { 
+                xp = 0; lvl++; 
+                document.getElementById('lvl-count').innerText = lvl.toString().padStart(2, '0'); 
+                showToast("¡ARQUITECTURA OPTIMITZADA! Nivell pujat."); 
+            }
+            document.getElementById('xp-fill').style.width = xp + "%";
+        }
+        function showToast(text) { 
+            const toast = document.getElementById('npc-toast'); 
+            toast.innerText = text; toast.style.display = 'block'; 
+            setTimeout(() => toast.style.display = 'none', 3000); 
+        }
+
+        // --- ARKANOID (METHOD BREAKOUT) ENGINE ---
+        const canvas = document.getElementById('arkanoidCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('game-score');
+
+        let score = 0, gameActive = true;
+        const paddleWidth = 75, paddleHeight = 10;
+        let paddleX = (canvas.width - paddleWidth) / 2;
+
+        const ballRadius = 5;
+        let x, y, dx, dy;
+
+        const brickRowCount = 4, brickColumnCount = 8;
+        const brickWidth = 40, brickHeight = 15, brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 15;
+        let bricks = [];
+
+        function initGame() {
+            canvas.width = 440;
+            canvas.height = 350;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            x = canvas.width / 2;
+            y = canvas.height - 30;
+            dx = 3;
+            dy = -3;
+            score = 0;
+            scoreEl.innerText = score;
+            gameActive = true;
+
+            bricks = [];
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r] = { x: 0, y: 0, status: 1 };
+                }
+            }
+        }
+
+        document.addEventListener("mousemove", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const relativeX = e.clientX - rect.left;
+            if (relativeX > 0 && relativeX < canvas.width) {
+                paddleX = relativeX - paddleWidth / 2;
+            }
+        });
+
+        function collisionDetection() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    const b = bricks[c][r];
+                    if (b.status === 1) {
+                        if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+                            dy = -dy;
+                            b.status = 0;
+                            score++;
+                            scoreEl.innerText = score;
+                            gainXP(5);
+                            showToast("METHOD_CALL_SUCCESS: Data returned");
+                            if (score === brickRowCount * brickColumnCount) {
+                                showToast("SYSTEM_STABLE: Mòduls completats!");
+                                setTimeout(initGame, 2000);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = "#f2ea02";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+            ctx.fillStyle = "#00ff41";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawBricks() {
+            const colors = ["#ff4141", "#bd00ff", "#00d2ff", "#f2ea02"];
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status === 1) {
+                        const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+                        const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+                        ctx.beginPath();
+                        ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                        ctx.fillStyle = colors[r];
+                        ctx.fill();
+                        ctx.strokeStyle = "#333";
+                        ctx.strokeRect(brickX, brickY, brickWidth, brickHeight);
+                        ctx.closePath();
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            if (!gameActive) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Grid background
+            ctx.strokeStyle = '#111';
+            for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+
+            drawBricks();
+            drawBall();
+            drawPaddle();
+            collisionDetection();
+
+            if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) dx = -dx;
+            if (y + dy < ballRadius) dy = -dy;
+            else if (y + dy > canvas.height - ballRadius) {
+                if (x > paddleX && x < paddleX + paddleWidth) {
+                    dy = -dy;
+                } else {
+                    gameActive = false;
+                    showToast("MODULAR_EXCEPTION: Stack Overflow!");
+                    setTimeout(initGame, 3000);
+                }
+            }
+
+            x += dx;
+            y += dy;
+            requestAnimationFrame(draw);
+        }
+
+        function resetGame() { initGame(); }
+
+        window.onload = () => {
+            initGame();
+            draw();
+            gainXP(20);
+            showToast("Nivell 5: Modularitat i Mètodes carregat.");
+        };
+    </script>
+</body>
+</html>

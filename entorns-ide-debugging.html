@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIVELL 4: Entorns IDE i Debugging</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pixel-bg: #0a0118;
+            --pixel-accent: #f2ea02; 
+            --pixel-success: #00ff41; 
+            --pixel-blue: #00d2ff;   
+            --pixel-purple: #bd00ff;
+            --pixel-border: #ffffff;
+            --pixel-red: #ff4141;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--pixel-bg);
+            color: #ffffff;
+            font-size: 10px;
+            overflow-x: hidden;
+            min-height: 100vh;
+            line-height: 1.8;
+            image-rendering: pixelated;
+        }
+
+        .background-container {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: -2;
+            background: linear-gradient(to bottom, #000000 0%, #0a0118 50%, #240046 100%);
+            perspective: 800px;
+        }
+
+        .retro-grid {
+            position: absolute; width: 200%; height: 200%; bottom: -50%; left: -50%;
+            background-image: linear-gradient(rgba(189, 0, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(189, 0, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; transform: rotateX(60deg);
+            animation: gridScroll 10s linear infinite;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(50px); }
+        }
+
+        .hud-bar {
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 4px solid var(--pixel-border);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .stat-group { display: flex; align-items: center; gap: 10px; }
+        .xp-bar-bg { width: 120px; height: 12px; background: #222; border: 2px solid #fff; position: relative; }
+        .xp-bar-fill { height: 100%; background: var(--pixel-success); width: 0%; transition: width 0.3s; box-shadow: inset -2px 0 0 #008021; }
+
+        .terminal-box {
+            background: rgba(15, 0, 30, 0.95);
+            border: 4px solid var(--pixel-border);
+            box-shadow: 10px 10px 0px #000;
+            position: relative;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        .code-snippet {
+            background: #000;
+            border-left: 4px solid var(--pixel-blue);
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            color: var(--pixel-success);
+            overflow-x: auto;
+            line-height: 2.2;
+        }
+
+        .highlight { color: var(--pixel-accent); }
+        .keyword { color: #ff00ff; }
+        .comment { color: #666; }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--pixel-accent);
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pixel-icon { width: 32px; height: 32px; flex-shrink: 0; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 7px; }
+        th, td { border: 2px solid #444; padding: 10px; text-align: left; }
+        th { background: #222; color: var(--pixel-blue); }
+
+        .btn-arcade {
+            background: var(--pixel-accent); color: black; padding: 12px;
+            border-bottom: 6px solid #b5af00; border-right: 6px solid #b5af00;
+            transition: all 0.1s; text-transform: uppercase; font-size: 8px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+        }
+        .btn-arcade:active { border: none; transform: translate(4px, 4px); }
+
+        canvas { image-rendering: pixelated; background: #000; border: 4px solid #333; }
+
+        #npc-toast {
+            position: fixed; bottom: 20px; right: 20px;
+            background: white; color: black; padding: 15px;
+            border: 4px solid black; display: none; z-index: 2000;
+            max-width: 250px; font-size: 7px; box-shadow: 8px 8px 0 rgba(0,0,0,0.5);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-container">
+        <div class="retro-grid"></div>
+    </div>
+
+    <!-- HUD BAR -->
+    <div class="hud-bar">
+        <div class="stat-group">
+            <span class="text-yellow-400 text-[9px]">P1</span>
+            <div class="text-[7px]">
+                <div>DANI_PROF</div>
+                <div class="text-red-500">HP: [||||||||||]</div>
+            </div>
+        </div>
+        <div class="stat-group">
+            <span class="text-blue-400 text-[8px]">LVL <span id="lvl-count">04</span></span>
+            <div class="xp-bar-bg">
+                <div id="xp-fill" class="xp-bar-fill"></div>
+            </div>
+        </div>
+        <div class="stat-group hidden md:flex">
+            <span class="text-green-500 text-[7px]">MISSION: IDE_DEBUGGING</span>
+        </div>
+    </div>
+
+    <nav class="p-6">
+        <div class="max-w-5xl mx-auto">
+            <button onclick="window.history.back()" class="text-yellow-400 hover:scale-105 transition-transform text-[8px] uppercase font-bold">
+                << TORNA_A_LA_BASE
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-4">
+        
+        <div class="mb-12 border-l-8 border-blue-400 pl-8">
+            <h1 class="text-2xl text-white uppercase tracking-tighter mb-3">🧠 Entorns IDE i Debugging</h1>
+            <p class="text-gray-500 text-[7px] uppercase tracking-widest">L'estació de combat del programador de videojocs</p>
+        </div>
+
+        <!-- 1. QUÈ ÉS UN IDE (MARIO) -->
+        <section class="terminal-box" onclick="gainXP(10)">
+            <div class="scanline"></div>
+            <h2 class="section-title">
+                <svg class="pixel-icon text-red-500" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M5 1h6v1H5V1zm-1 1h9v1H4V2zm0 1h1v1H4V3zm4 0h1v1H8V3zm4 0h1v1h-1V3zM3 4h2v1H3V4zm5 0h1v1H8V4zm4 0h2v1h-2V4zM3 5h1v1H3V5zm10 0h1v1h-1V5zM4 6h8v1H4V6zm1 1h6v1H5V7zm-1 1h8v1H4V8zM3 9h10v1H3V9zm-1 1h12v1H2v-1zM4 11h2v3H4v-3zm6 0h2v3h-2v-3z"/>
+                </svg>
+                1. Què és un IDE?
+            </h2>
+            <p class="text-gray-400 mb-6">Un IDE (Integrated Development Environment) és un entorn que integra totes les eines necessàries per programar en un sol lloc.</p>
+            <p class="text-blue-300 text-[8px] mb-4 uppercase underline">Normalment inclou:</p>
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[7px] text-gray-300">
+                <li><span class="text-blue-400">>></span> Editor de codi</li>
+                <li><span class="text-blue-400">>></span> Compilador o intèrpret</li>
+                <li><span class="text-blue-400">>></span> Sistema de debugging</li>
+                <li><span class="text-blue-400">>></span> Gestor de projectes</li>
+                <li><span class="text-blue-400">>></span> Control de versions</li>
+                <li><span class="text-blue-400">>></span> Autocompletat (IntelliSense)</li>
+            </ul>
+        </section>
+
+        <!-- 2. IDEs HABITUALS (SONIC) -->
+        <section class="terminal-box border-blue-600" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-blue-500" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M2 2h4v1H2V2zm6 0h6v1H8V2zm-6 3h12v1H2V5zm0 3h8v1H2V8zm0 3h12v1H2v-3z"/>
+                </svg>
+                2. IDEs habituals en videojocs
+            </h2>
+            <div class="space-y-8">
+                <div>
+                    <h4 class="text-purple-400 text-[8px] mb-3 uppercase underline">🎮 Visual Studio</h4>
+                    <p class="text-[7px] text-gray-400 mb-2">Ús principal: C# i Unity.</p>
+                    <ul class="text-[6px] text-gray-500 ml-4 space-y-1">
+                        <li>- IntelliSense molt potent</li>
+                        <li>- Debugger complet</li>
+                        <li>- Integració directa amb Unity</li>
+                        <li>- Refactorització automàtica</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-blue-400 text-[8px] mb-3 uppercase underline">🎮 Visual Studio Code</h4>
+                    <p class="text-[7px] text-gray-400 mb-2">Ús principal: Editor lleuger amb extensions.</p>
+                    <ul class="text-[6px] text-gray-500 ml-4 space-y-1">
+                        <li>- Molt ràpid i lleuger</li>
+                        <li>- Personalitzable amb extensions</li>
+                        <li>- Ideal per equips menys potents</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-gray-900/50 border border-green-900">
+                    <h4 class="text-green-400 text-[8px] mb-3 uppercase underline">🎮 Unity</h4>
+                    <p class="text-[7px] text-gray-400 mb-4">Unity no substitueix l'IDE, però inclou:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[6px]">
+                        <div class="p-2 border border-gray-700">Consola d'errors</div>
+                        <div class="p-2 border border-gray-700">Inspector d'objectes</div>
+                        <div class="p-2 border border-gray-700">Mode Play (Test)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. FUNCIONALITATS (LINK) -->
+        <section class="terminal-box border-yellow-500" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-yellow-500" viewBox="0 0 16 16" fill="currentColor"><path d="M7 2h2v2H7V2zm-2 4h6v2H5V6zm-2 4h10v2H3v-2zm-2 4h14v2H1v-2z"/></svg>
+                3. Funcionalitats clau d'un IDE
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-[7px]">
+                <div class="space-y-4">
+                    <p><span class="text-blue-400">✍ Editor intel·ligent:</span> Autocompletat, detecció d'errors en temps real i format automàtic.</p>
+                    <p><span class="text-blue-400">🗂 Gestió de projectes:</span> Organització en carpetes, referències i compilació automàtica.</p>
+                </div>
+                <div class="space-y-4">
+                    <p><span class="text-blue-400">🔄 Control de versions:</span> Integració amb Git, seguiment de canvis i resolució de conflictes.</p>
+                    <p><span class="text-blue-400">🧪 Debugger:</span> La part més important a nivell formatiu per caçar bugs.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. DEBUGGING (PAC-MAN) -->
+        <section class="terminal-box border-success" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-yellow-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8v1h2v2h1v8h-1v2h-2v1H4v-1H2v-2H1V4h1V2h2V1zm5 5h2v2H9V6z"/></svg>
+                4. Què és el Debugging?
+            </h2>
+            <p class="text-gray-400 mb-6">El debugging és el procés d’identificar i corregir errors (bugs) en un programa.</p>
+            <div class="p-4 bg-red-900/10 border border-red-500 mb-6">
+                <h4 class="text-red-500 text-[8px] mb-3 uppercase">Exemples en videojocs:</h4>
+                <ul class="text-[7px] text-gray-300 space-y-2">
+                    <li>- Mecàniques que no funcionen</li>
+                    <li>- Personatge que travessa el terra (Noclip bug)</li>
+                    <li>- Puntuacions incorrectes</li>
+                    <li>- Errors de física o NullReferenceException</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 5. TIPUS D'ERRORS (MEGA MAN) -->
+        <section class="terminal-box border-blue-400" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-blue-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8v1h2v2h1v6h-1v2H4v-2H2V5h2V2zm1 2v2H4V4h1zm7 0h1v2h-1V4zM6 8h4v2H6V8z"/></svg>
+                5. Tipus d'errors
+            </h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h4 class="text-red-500 text-[8px] mb-2 uppercase">❌ Errors de sintaxi</h4>
+                    <p class="text-[7px] text-gray-400 mb-2">El codi no compila. L’IDE marca l’error abans d’executar.</p>
+                    <pre class="code-snippet"><span class="keyword">int</span> vida = <span class="highlight">"100"</span>; <span class="comment">// No es pot assignar string a int</span></pre>
+                </div>
+
+                <div>
+                    <h4 class="text-orange-500 text-[8px] mb-2 uppercase">⚠ Errors d'execució</h4>
+                    <p class="text-[7px] text-gray-400 mb-2">El programa compila però falla mentre el jugues.</p>
+                    <pre class="code-snippet">
+GameObject enemy = <span class="keyword">null</span>;
+enemy.transform.position = Vector3.zero; <span class="comment">// NullReferenceException</span></pre>
+                </div>
+
+                <div>
+                    <h4 class="text-yellow-500 text-[8px] mb-2 uppercase">🧠 Errors lògics</h4>
+                    <p class="text-[7px] text-gray-400 mb-2">El programa funciona, però el resultat és incorrecte.</p>
+                    <pre class="code-snippet">
+<span class="keyword">if</span> (vida < 0) { GameOver(); } 
+<span class="comment">// Error: Hauria de ser vida <= 0 per incloure la mort</span></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. EINES DE DEBUGGING (KIRBY) -->
+        <section class="terminal-box border-purple-500" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-pink-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3h8v1h2v8h-2v1H4v-1H2V4h2V3zm2 3h1v2H6V6zm4 0h1v2h-1V6zM6 10h4v1H6v-1z"/></svg>
+                6. Eines de Debugging
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h4 class="text-red-500 text-[8px] mb-3 uppercase">🔴 Breakpoints</h4>
+                    <p class="text-[7px] text-gray-300">Un punt on el programa s'atura per analitzar l'estat.</p>
+                    <ul class="text-[6px] text-gray-500 mt-2 space-y-1">
+                        <li>- Veure valors de variables</li>
+                        <li>- Executar línia a línia</li>
+                        <li>- Analitzar el flux</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-green-500 text-[8px] mb-3 uppercase">👣 Execució pas a pas</h4>
+                    <div class="space-y-3 text-[6px] text-gray-400">
+                        <p><span class="text-white">Step Into:</span> Entra dins del mètode.</p>
+                        <p><span class="text-white">Step Over:</span> Executa sense entrar-hi.</p>
+                        <p><span class="text-white">Step Out:</span> Surt del mètode actual.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border border-blue-500 bg-blue-900/10">
+                <h4 class="text-blue-400 text-[8px] mb-2 uppercase">👀 Watch / Variables locals</h4>
+                <p class="text-[7px] text-gray-300">Permet observar canvis en temps real (vida, velocitat, IA) mentre el codi s'executa lentament.</p>
+            </div>
+        </section>
+
+        <!-- DEBUG MAZE: PAC-MAN GAME -->
+        <div class="terminal-box border-yellow-400 overflow-hidden">
+            <div class="scanline"></div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-yellow-400 uppercase text-[9px]">SYSTEM_CLEANER: DEBUG_MAZE</h2>
+                <div class="flex gap-4 items-center">
+                    <span class="text-[7px] text-blue-400 uppercase font-bold">BUGS_RESOLVED: <span id="game-score">0</span></span>
+                    <button onclick="resetGame()" class="text-[6px] bg-red-900 px-3 py-1 border border-red-500 uppercase">Reset_Debug</button>
+                </div>
+            </div>
+            
+            <canvas id="mazeCanvas" class="w-full h-[380px] mx-auto block"></canvas>
+            
+            <div class="controls-hint text-center mt-6">
+                <p class="text-[7px] text-gray-400 mb-2 uppercase">Fes servir les FLETXES del teclat per moure el depurador</p>
+                <p class="text-[6px] text-gray-500">Recull els errors (punts) i evita els BUGS (fantasmes) per estabilitzar el sistema.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="npc-toast"></div>
+
+    <script>
+        let xp = 0, lvl = 4;
+        function gainXP(amount) {
+            xp += amount;
+            if (xp >= 100) { 
+                xp = 0; lvl++; 
+                document.getElementById('lvl-count').innerText = lvl.toString().padStart(2, '0'); 
+                showToast("¡SISTEMA OPTIMITZAT! Has pujat de nivell."); 
+            }
+            document.getElementById('xp-fill').style.width = xp + "%";
+        }
+        function showToast(text) { 
+            const toast = document.getElementById('npc-toast'); 
+            toast.innerText = text; toast.style.display = 'block'; 
+            setTimeout(() => toast.style.display = 'none', 3000); 
+        }
+
+        // --- DEBUG MAZE (PAC-MAN) ENGINE ---
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('game-score');
+
+        const TILE_SIZE = 20;
+        let score = 0;
+        let gameActive = true;
+        let frameCount = 0;
+
+        const mazeLayout = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,1,1],
+            [1,2,2,1,0,1,0,0,0,0,0,0,0,0,1,0,1,2,2,1],
+            [1,1,1,1,0,1,0,1,1,2,2,1,1,0,1,0,1,1,1,1],
+            [1,2,2,2,0,0,0,1,2,2,2,2,1,0,0,0,2,2,2,1],
+            [1,1,1,1,0,1,0,1,1,1,1,1,1,0,1,0,1,1,1,1],
+            [1,2,2,1,0,1,0,0,0,0,0,0,0,0,1,0,1,2,2,1],
+            [1,1,1,1,0,1,0,1,1,1,1,1,1,0,1,0,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,0,1],
+            [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+            [1,1,0,1,0,1,0,1,1,1,1,1,1,0,1,0,1,0,1,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        let maze = [];
+        const player = { x: 1, y: 1, dir: 'right', nextDir: 'right' };
+        const ghosts = [
+            { x: 9, y: 7, color: '#ff4141', dir: 'up' },
+            { x: 10, y: 7, color: '#bd00ff', dir: 'up' }
+        ];
+
+        function initGame() {
+            canvas.width = 400;
+            canvas.height = 380;
+            maze = mazeLayout.map(row => [...row]);
+            player.x = 1; player.y = 1;
+            player.dir = 'right'; player.nextDir = 'right';
+            score = 0; scoreEl.innerText = score;
+            gameActive = true;
+        }
+
+        window.addEventListener("keydown", e => {
+            if (e.key === "ArrowUp") player.nextDir = 'up';
+            if (e.key === "ArrowDown") player.nextDir = 'down';
+            if (e.key === "ArrowLeft") player.nextDir = 'left';
+            if (e.key === "ArrowRight") player.nextDir = 'right';
+        });
+
+        function moveEntity(entity, isPlayer = false) {
+            let dx = 0, dy = 0;
+            let dir = isPlayer ? entity.nextDir : entity.dir;
+
+            if (dir === 'up') dy = -1;
+            if (dir === 'down') dy = 1;
+            if (dir === 'left') dx = -1;
+            if (dir === 'right') dx = 1;
+
+            if (maze[entity.y + dy] && maze[entity.y + dy][entity.x + dx] !== 1) {
+                entity.x += dx;
+                entity.y += dy;
+                if (isPlayer) entity.dir = dir;
+            } else if (isPlayer) {
+                dx = 0; dy = 0;
+                if (entity.dir === 'up') dy = -1;
+                if (entity.dir === 'down') dy = 1;
+                if (entity.dir === 'left') dx = -1;
+                if (entity.dir === 'right') dx = 1;
+                if (maze[entity.y + dy] && maze[entity.y + dy][entity.x + dx] !== 1) {
+                    entity.x += dx;
+                    entity.y += dy;
+                }
+            } else {
+                const dirs = ['up', 'down', 'left', 'right'];
+                entity.dir = dirs[Math.floor(Math.random() * 4)];
+            }
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            moveEntity(player, true);
+            
+            if (maze[player.y][player.x] === 0) {
+                maze[player.y][player.x] = 2;
+                score++;
+                scoreEl.innerText = score;
+                gainXP(2);
+            }
+
+            if (frameCount % 10 === 0) {
+                ghosts.forEach(g => {
+                    moveEntity(g);
+                    if (g.x === player.x && g.y === player.y) {
+                        gameActive = false;
+                        showToast("CRITICAL_ERROR: Debugger Crashed!");
+                    }
+                });
+            }
+
+            // Check Win
+            let remaining = false;
+            maze.forEach(row => { if(row.includes(0)) remaining = true; });
+            if (!remaining) {
+                showToast("CODE_CLEAN: System Stable!");
+                initGame();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = '#1a0133';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeStyle = '#331166';
+                        ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    } else if (maze[y][x] === 0) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(x * TILE_SIZE + 10, y * TILE_SIZE + 10, 2, 0, Math.PI*2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // Player (Pac-Debugger)
+            ctx.fillStyle = '#f2ea02';
+            ctx.beginPath();
+            let sa = 0.2, ea = 1.8;
+            if (player.dir === 'left') { sa = 1.2; ea = 0.8; }
+            if (player.dir === 'up') { sa = 1.7; ea = 1.3; }
+            if (player.dir === 'down') { sa = 0.7; ea = 0.3; }
+            ctx.arc(player.x * TILE_SIZE + 10, player.y * TILE_SIZE + 10, 8, sa * Math.PI, ea * Math.PI);
+            ctx.lineTo(player.x * TILE_SIZE + 10, player.y * TILE_SIZE + 10);
+            ctx.fill();
+
+            // Ghosts
+            ghosts.forEach(g => {
+                ctx.fillStyle = g.color;
+                ctx.beginPath();
+                ctx.arc(g.x * TILE_SIZE + 10, g.y * TILE_SIZE + 10, 8, Math.PI, 0);
+                ctx.fillRect(g.x * TILE_SIZE + 2, g.y * TILE_SIZE + 10, 16, 8);
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.fillRect(g.x * TILE_SIZE + 4, g.y * TILE_SIZE + 6, 4, 4);
+                ctx.fillRect(g.x * TILE_SIZE + 12, g.y * TILE_SIZE + 6, 4, 4);
+            });
+
+            if (!gameActive) {
+                ctx.fillStyle = "rgba(0,0,0,0.8)";
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.font = "10px 'Press Start 2P'";
+                ctx.fillText("DEBUG_FAILED", canvas.width/2, canvas.height/2);
+            }
+        }
+
+        function loop() {
+            frameCount++;
+            if (frameCount % 8 === 0) update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        function resetGame() { initGame(); }
+
+        window.onload = () => {
+            initGame();
+            loop();
+            gainXP(20);
+            showToast("Missió Nivell 4: Neteja els errors del laberint!");
+        };
+
+        window.addEventListener('resize', () => {
+            canvas.width = 400; canvas.height = 380;
+        });
+    </script>
+</body>
+</html>

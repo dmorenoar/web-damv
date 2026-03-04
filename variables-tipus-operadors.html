@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIVELL 1: Variables i Operadors</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pixel-bg: #0a0118;
+            --pixel-accent: #f2ea02; 
+            --pixel-success: #00ff41; 
+            --pixel-blue: #00d2ff;   
+            --pixel-purple: #bd00ff;
+            --pixel-border: #ffffff;
+            --pixel-red: #ff4141;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--pixel-bg);
+            color: #ffffff;
+            font-size: 10px;
+            overflow-x: hidden;
+            min-height: 100vh;
+            line-height: 1.8;
+            image-rendering: pixelated;
+        }
+
+        /* FONDO DINÀMIC */
+        .background-container {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: -2;
+            background: linear-gradient(to bottom, #000000 0%, #0a0118 50%, #240046 100%);
+            perspective: 800px;
+        }
+
+        .retro-grid {
+            position: absolute; width: 200%; height: 200%; bottom: -50%; left: -50%;
+            background-image: linear-gradient(rgba(189, 0, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(189, 0, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; transform: rotateX(60deg);
+            animation: gridScroll 10s linear infinite;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(50px); }
+        }
+
+        /* HUD - TOP BAR */
+        .hud-bar {
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 4px solid var(--pixel-border);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .stat-group { display: flex; align-items: center; gap: 10px; }
+        .xp-bar-bg { width: 120px; height: 12px; background: #222; border: 2px solid #fff; position: relative; }
+        .xp-bar-fill { height: 100%; background: var(--pixel-success); width: 0%; transition: width 0.3s; box-shadow: inset -2px 0 0 #008021; }
+
+        /* TERMINAL BOX */
+        .terminal-box {
+            background: rgba(15, 0, 30, 0.95);
+            border: 4px solid var(--pixel-border);
+            box-shadow: 10px 10px 0px #000;
+            position: relative;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(255, 255, 255, 0.03);
+            position: absolute; top: 0; left: 0;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        .code-snippet {
+            background: #000;
+            border-left: 4px solid var(--pixel-blue);
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            color: var(--pixel-success);
+            overflow-x: auto;
+            line-height: 2.2;
+        }
+
+        .highlight { color: var(--pixel-accent); }
+        .comment { color: #666; }
+        .keyword { color: #ff00ff; }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--pixel-accent);
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pixel-icon { width: 32px; height: 32px; flex-shrink: 0; }
+
+        .tag {
+            display: inline-block; padding: 4px 8px; font-size: 7px;
+            background: #333; color: #fff; margin-right: 5px; border-radius: 0;
+            border: 1px solid #555;
+        }
+
+        /* TAULA COMPARATIVA */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 7px; }
+        th, td { border: 2px solid #444; padding: 10px; text-align: left; }
+        th { background: #222; color: var(--pixel-blue); }
+
+        .btn-arcade {
+            background: var(--pixel-accent); color: black; padding: 12px;
+            border-bottom: 6px solid #b5af00; border-right: 6px solid #b5af00;
+            transition: all 0.1s; text-transform: uppercase; font-size: 8px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+        }
+        .btn-arcade:active { border: none; transform: translate(4px, 4px); }
+
+        /* PONG CANVAS */
+        canvas { image-rendering: pixelated; background: #000; border: 4px solid #333; cursor: none; }
+
+        #npc-toast {
+            position: fixed; bottom: 20px; right: 20px;
+            background: white; color: black; padding: 15px;
+            border: 4px solid black; display: none; z-index: 2000;
+            max-width: 250px; font-size: 7px; box-shadow: 8px 8px 0 rgba(0,0,0,0.5);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-container">
+        <div class="retro-grid"></div>
+    </div>
+
+    <!-- HUD BAR -->
+    <div class="hud-bar">
+        <div class="stat-group">
+            <span class="text-yellow-400 text-[9px]">P1</span>
+            <div class="text-[7px]">
+                <div>DANI_PROF</div>
+                <div class="text-red-500">HP: [||||||||||]</div>
+            </div>
+        </div>
+        <div class="stat-group">
+            <span class="text-blue-400 text-[8px]">LVL <span id="lvl-count">01</span></span>
+            <div class="xp-bar-bg">
+                <div id="xp-fill" class="xp-bar-fill"></div>
+            </div>
+        </div>
+        <div class="stat-group hidden md:flex">
+            <span class="text-green-500 text-[7px]">MISSION: M0485_NIVELL-1</span>
+        </div>
+    </div>
+
+    <nav class="p-6">
+        <div class="max-w-5xl mx-auto">
+            <button onclick="window.location.href='index.html'"  class="text-yellow-400 hover:scale-105 transition-transform text-[8px] uppercase font-bold">
+                << TORNA_A_LA_BASE
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 py-4">
+        
+        <!-- HEADER DE MISSIÓ -->
+        <div class="mb-12 border-l-8 border-yellow-400 pl-8">
+            <h1 class="text-2xl text-white uppercase tracking-tighter mb-3">🧱 Nivell 1 — Variables, Tipus i Operadors</h1>
+            <p class="text-gray-500 text-[7px] uppercase tracking-widest">Fonaments de C# per a Videojocs</p>
+        </div>
+
+        <!-- 1.1 QUÈ ÉS UNA VARIABLE (MARIO) -->
+        <section class="terminal-box" onclick="gainXP(10)">
+            <div class="scanline"></div>
+            <h2 class="section-title">
+                <svg class="pixel-icon text-red-500" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M5 1h6v1H5V1zm-1 1h9v1H4V2zm0 1h1v1H4V3zm4 0h1v1H8V3zm4 0h1v1h-1V3zM3 4h2v1H3V4zm5 0h1v1H8V4zm4 0h2v1h-2V4zM3 5h1v1H3V5zm10 0h1v1h-1V5zM4 6h8v1H4V6zm1 1h6v1H5V7zm-1 1h8v1H4V8zM3 9h10v1H3V9zm-1 1h12v1H2v-1zM4 11h2v3H4v-3zm6 0h2v3h-2v-3z"/>
+                </svg>
+                1.1 — Què és una variable?
+            </h2>
+            <p class="text-gray-400 mb-4">És un espai de memòria RAM amb nom que guarda un valor. Quan declares <code class="text-white">int vida = 100;</code> passen 4 coses:</p>
+            <ul class="space-y-3 mb-6 text-[8px] text-gray-300 list-inside list-disc">
+                <li>Es reserva un espai de 32 bits a la RAM.</li>
+                <li>Es defineix que l'espai és de tipus <span class="text-blue-400">int</span>.</li>
+                <li>S'associa el nom <span class="text-yellow-400">vida</span> a la posició.</li>
+                <li>S'escriu el valor <span class="text-green-500">100</span>.</li>
+            </ul>
+            <pre class="code-snippet"><span class="keyword">int</span> vida = 100;</pre>
+        </section>
+
+        <!-- 1.2 TIPUS DE DADES (SONIC) -->
+        <section class="terminal-box border-blue-600" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-blue-500" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h4v1H2V2zm6 0h6v1H8V2zm-6 3h12v1H2V5zm0 3h8v1H2V8zm0 3h12v1H2v-3z"/></svg>
+                1.2 — Tipus de dades primitius
+            </h2>
+            <table>
+                <thead>
+                    <tr><th>Tipus</th><th>Bits</th><th>Ús típic</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>int</td><td>32</td><td>Vida, puntuació, monedes</td></tr>
+                    <tr><td>long</td><td>64</td><td>Rànquings globals massius</td></tr>
+                    <tr><td>float</td><td>32</td><td>Velocitat, posicions</td></tr>
+                    <tr><td>double</td><td>64</td><td>Càlculs físics exigents</td></tr>
+                    <tr><td>bool</td><td>1</td><td>Estats (true/false)</td></tr>
+                    <tr><td>string</td><td>Var.</td><td>Noms, diàlegs, textos UI</td></tr>
+                </tbody>
+            </table>
+            <div class="mt-4 p-3 border border-red-500 bg-red-900/10">
+                <p class="text-red-500 text-[6px] uppercase font-bold">⚠️ float vs double:</p>
+                <p class="text-[6px] text-gray-400">La GPU prefereix 32 bits. No oblidis la 'f'.</p>
+                <pre class="code-snippet" style="font-size: 7px;"><span class="keyword">float</span> velocitat = 3.5f;</pre>
+            </div>
+        </section>
+
+        <!-- 1.3 OPERADORS ARITMÈTICS (LINK) -->
+        <section class="terminal-box border-green-500" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-green-500" viewBox="0 0 16 16" fill="currentColor"><path d="M7 2h2v2H7V2zm-2 4h6v2H5V6zm-2 4h10v2H3v-2zm-2 4h14v2H1v-2z"/></svg>
+                1.3 — Operadors aritmètics
+            </h2>
+            <table>
+                <thead>
+                    <tr><th>Op</th><th>Significat</th><th>Exemple</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>+</td><td>Suma</td><td>vida + pocio</td></tr>
+                    <tr><td>-</td><td>Resta</td><td>vida - dany</td></tr>
+                    <tr><td>*</td><td>Mult.</td><td>baseDany * mult</td></tr>
+                    <tr><td>/</td><td>Divisió</td><td>total / 2</td></tr>
+                    <tr><td>%</td><td>Mòdul</td><td>monedes % 3</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 1.4 & 1.5 ASSIGNACIÓ I INCREMENT (PAC-MAN) -->
+        <section class="terminal-box" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-yellow-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1h8v1h2v2h1v8h-1v2h-2v1H4v-1H2v-2H1V4h1V2h2V1zm5 5h2v2H9V6z"/></svg>
+                1.4 - 1.5 Assignació i Increment
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-blue-400 text-[8px] mb-3 uppercase underline">1.4 Assignació</h3>
+                    <table>
+                        <tbody>
+                            <tr><td>+=</td><td>Suma i assig.</td></tr>
+                            <tr><td>-=</td><td>Resta i assig.</td></tr>
+                            <tr><td>*=</td><td>Mult. i assig.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border border-purple-500 bg-purple-900/10">
+                    <h3 class="text-purple-400 text-[8px] mb-3 uppercase underline">1.5 Pre vs Post</h3>
+                    <pre class="code-snippet" style="font-size: 7px;">
+<span class="keyword">int</span> a = 5;
+<span class="keyword">int</span> b = a++; <span class="comment">// b=5, a=6</span>
+<span class="keyword">int</span> c = ++a; <span class="comment">// c=7, a=7</span></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 1.6 OPERADORS DE COMPARACIÓ (TRIFORCE) -->
+        <section class="terminal-box border-yellow-500" onclick="gainXP(10)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-yellow-500" viewBox="0 0 16 16" fill="currentColor"><path d="M7 2h2v2H7V2zm-2 4h6v2H5V6zm-2 4h10v2H3v-2zm-2 4h14v2H1v-2z"/></svg>
+                1.6 — Operadors de comparació
+            </h2>
+            <table>
+                <thead>
+                    <tr><th>Op</th><th>Significat</th><th>Exemple</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>==</td><td>Igual</td><td>vida == 100</td></tr>
+                    <tr><td>!=</td><td>Diferent</td><td>estat != MORT</td></tr>
+                    <tr><td>></td><td>Major</td><td>dany > defensa</td></tr>
+                    <tr><td><</td><td>Menor</td><td>vida < 0</td></tr>
+                    <tr><td>>=</td><td>Major o igual</td><td>nivell >= 10</td></tr>
+                    <tr><td><=</td><td>Menor o igual</td><td>vida <= 30</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 1.7 OPERADORS LÒGICS (MEGA MAN) -->
+        <section class="terminal-box border-blue-400" onclick="gainXP(15)">
+            <h2 class="section-title">
+                <svg class="pixel-icon text-blue-400" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8v1h2v2h1v6h-1v2H4v-2H2V5h2V2zm1 2v2H4V4h1zm7 0h1v2h-1V4zM6 8h4v2H6V8z"/></svg>
+                1.7 — Operadors lògics
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-[7px]">
+                <div class="p-4 bg-black border border-blue-900 flex flex-col justify-between">
+                    <div>
+                        <p class="text-blue-400 mb-2">&& (AND)</p>
+                        <p class="text-gray-400 text-[6px] mb-4">Les dues condicions han de ser certes.</p>
+                    </div>
+                    <pre class="code-snippet text-[6px]">if(vida > 0 && mana > 10)</pre>
+                </div>
+                <div class="p-4 bg-black border border-purple-900 flex flex-col justify-between">
+                    <div>
+                        <p class="text-purple-400 mb-2">|| (OR)</p>
+                        <p class="text-gray-400 text-[6px] mb-4">N'hi ha prou que una sigui certa.</p>
+                    </div>
+                    <pre class="code-snippet text-[6px]">if(vida <= 0 || temps <= 0)</pre>
+                </div>
+                <div class="p-4 bg-black border border-red-900 flex flex-col justify-between">
+                    <div>
+                        <p class="text-red-400 mb-2">! (NOT)</p>
+                        <p class="text-gray-400 text-[6px] mb-4">Inverteix el valor booleà.</p>
+                    </div>
+                    <pre class="code-snippet text-[6px]">if(!estaViu)</pre>
+                </div>
+            </div>
+            
+            <div class="p-4 border border-yellow-500 bg-yellow-900/10">
+                <h3 class="text-yellow-400 text-[9px] mb-4 uppercase underline">🚀 Combinació avançada: IA real</h3>
+                <p class="text-gray-400 text-[6px] mb-4">Un sistema de decisió complet basat en l'estat:</p>
+                <pre class="code-snippet">
+<span class="keyword">if</span> (vida < 30 && !estaEnCobertura) {
+    Console.WriteLine(<span class="highlight">"Fugir!"</span>);
+} <span class="keyword">else if</span> (vida < 30 && estaEnCobertura) {
+    Console.WriteLine(<span class="highlight">"Curar-se"</span>);
+} <span class="keyword">else</span> {
+    Console.WriteLine(<span class="highlight">"Atacar"</span>);
+}</pre>
+            </div>
+        </section>
+
+        <!-- PONG DATA ANALYZER -->
+        <div class="terminal-box border-yellow-400 overflow-hidden">
+            <div class="scanline"></div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-yellow-400 uppercase text-[9px]">PONG_DATA_ANALYZER_V1.0</h2>
+                <div class="flex gap-4 items-center">
+                    <span class="text-[7px] text-blue-400 uppercase font-bold">Data_Processed: <span id="pong-score">0</span></span>
+                    <button onclick="resetGame()" class="text-[6px] bg-red-900 px-3 py-1 border border-red-500 uppercase font-bold">Reset</button>
+                </div>
+            </div>
+            
+            <canvas id="pongCanvas" class="w-full h-[300px]"></canvas>
+
+            <div class="mt-4 text-center">
+                <p class="text-[6px] text-gray-500 uppercase tracking-widest animate-pulse">Mou el ratolí per controlar la porta de memòria (Paddle)</p>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="npc-toast"></div>
+
+    <script>
+        let xp = 0;
+        let lvl = 1;
+
+        function gainXP(amount) {
+            xp += amount;
+            if (xp >= 100) {
+                xp = 0;
+                lvl++;
+                document.getElementById('lvl-count').innerText = lvl.toString().padStart(2, '0');
+                showToast("¡NIVELL UP! Has dominat la lògica de dades.");
+            }
+            document.getElementById('xp-fill').style.width = xp + "%";
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('npc-toast');
+            toast.innerText = text;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        // --- PONG GAME ENGINE ---
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('pong-score');
+
+        let paddleWidth = 10, paddleHeight = 60;
+        let user = { x: 20, y: 0, score: 0 };
+        let cpu = { x: 0, y: 0, score: 0 };
+        let ball = { x: 0, y: 0, radius: 6, speed: 4, dx: 4, dy: 4 };
+
+        function initGame() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            user.y = canvas.height/2 - paddleHeight/2;
+            cpu.x = canvas.width - 30;
+            cpu.y = canvas.height/2 - paddleHeight/2;
+            ball.x = canvas.width/2;
+            ball.y = canvas.height/2;
+        }
+
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        function drawCircle(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        function collision(b, p) {
+            return b.x < p.x + paddleWidth && b.x + b.radius > p.x &&
+                   b.y < p.y + paddleHeight && b.y + b.radius > p.y;
+        }
+
+        function update() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // AI CPU
+            cpu.y += (ball.y - (cpu.y + paddleHeight/2)) * 0.1;
+
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy *= -1;
+
+            let player = (ball.x < canvas.width/2) ? user : cpu;
+            if (collision(ball, player)) {
+                ball.dx *= -1.1;
+                user.score++;
+                scoreEl.innerText = user.score;
+                gainXP(2);
+                showToast("DATA_CHUNK_ALLOCATED");
+            }
+
+            if (ball.x < 0 || ball.x > canvas.width) {
+                ball.x = canvas.width/2;
+                ball.y = canvas.height/2;
+                ball.dx = 4 * (ball.dx > 0 ? -1 : 1);
+            }
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#222';
+            for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+            for(let i=0; i<canvas.height; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke(); }
+
+            drawRect(user.x, user.y, paddleWidth, paddleHeight, "#00ff41");
+            drawRect(cpu.x, cpu.y, paddleWidth, paddleHeight, "#ff4141");
+            drawCircle(ball.x, ball.y, ball.radius, "#f2ea02");
+        }
+
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            user.score = 0;
+            scoreEl.innerText = "0";
+            initGame();
+        }
+
+        canvas.addEventListener("mousemove", e => {
+            let rect = canvas.getBoundingClientRect();
+            user.y = e.clientY - rect.top - paddleHeight/2;
+        });
+
+        window.onload = () => {
+            initGame();
+            gameLoop();
+            gainXP(15);
+        };
+
+        window.addEventListener('resize', initGame);
+    </script>
+</body>
+</html>
